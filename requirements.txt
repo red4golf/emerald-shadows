@@ -1,0 +1,22 @@
+# Core dependencies
+pathlib>=2.3.0
+typing>=3.7.4
+DateTime>=4.3
+logging>=0.5.1.2
+prompt_toolkit>=3.0.0
+colorama>=0.4.4
+
+# Testing
+pytest>=6.0.0
+pytest-cov>=2.10.0
+pytest-mock>=3.6.1
+
+# Development
+black>=21.5b2
+flake8>=3.9.2
+mypy>=0.910
+isort>=5.9.1
+
+# Documentation
+Sphinx>=4.0.2
+sphinx-rtd-theme>=0.5.2
