@@ -11,193 +11,265 @@ Welcome to Emerald Shadows, a noir detective text adventure set in 1947 post-war
 4. Run: `python -m emerald_shadows`
 
 ### Basic Controls
-Type commands and press Enter to interact with the game world.
+Type commands and press Enter to interact with the game world. Commands can be written in natural language - the game will understand your intent.
+
+#### Example Commands:
+```
+> look around the office
+You're in a dimly lit detective's office. A wooden desk sits in the center...
+
+> examine the desk
+The desk is worn but well-maintained. Several items catch your eye: a telephone, a stack of papers, and an old coffee mug.
+
+> take papers
+You pick up the stack of papers. They appear to be case files.
+```
 
 ## Game Commands
 
 ### Movement
-- `north` (or `n`): Move north
-- `south` (or `s`): Move south
-- `east` (or `e`): Move east
-- `west` (or `w`): Move west
-- `up`: Go up
-- `down`: Go down
+Navigate through locations using compass directions or obvious paths.
+
+#### Basic Movement Examples:
+```
+> go north
+Moving north to the hallway...
+
+> s
+Moving south to the lobby...
+
+> walk to the door
+Moving to the door on the east side...
+```
+
+#### Complex Movement Examples:
+```
+> enter the smith tower
+You push through the revolving doors into the grand lobby of Smith Tower...
+
+> climb stairs
+You ascend the staircase to the second floor...
+
+> follow the suspicious man
+You discretely follow the man down the dimly lit alley...
+```
 
 ### Investigation
-- `look`: Examine your surroundings
-- `examine [item]`: Look at something closely
-- `take [item]`: Pick up an item
-- `inventory` (or `i`): Check your belongings
-- `solve`: Attempt to solve a puzzle
+Examine your surroundings and interact with objects to uncover clues.
+
+#### Investigation Examples:
+```
+> look
+The police archives are dimly lit by fluorescent lights. Metal filing cabinets line the walls...
+
+> examine filing cabinet
+The cabinet is labeled "1946-1947". One drawer is slightly ajar...
+
+> search drawer
+Inside the drawer, you find several case files and an unmarked envelope...
+
+> read envelope
+The envelope contains a coded message written in what appears to be invisible ink...
+```
 
 ### Item Interaction
-- `use [item]`: Use an item
-- `combine [item1] [item2]`: Try to combine items
+Items can be combined, used, and examined for clues.
 
-### Game Control
-- `save`: Save your game
-- `load`: Load a saved game
-- `help`: Show commands
-- `quit`: Exit game
+#### Basic Item Examples:
+```
+> inventory
+You are carrying:
+- A worn leather notebook
+- A police badge
+- A blacklight
+- Some blank papers
 
-### Trolley System
-When on the trolley:
-- `next`: Go to next stop
-- `off`: Exit trolley
-- `status`: View route info
-- `history`: Learn about stop
+> examine notebook
+The notebook contains various case notes and a strange sequence of numbers...
 
-## Game Features
+> use blacklight on papers
+Under the blacklight, hidden writing becomes visible on the papers!
+```
 
-### Auto-Save System
-The game automatically saves:
-- Every 5 minutes
-- When exiting
-- After major events
+#### Complex Item Combinations:
+```
+> combine radio parts with antenna
+You assemble the parts into a working radio receiver...
 
-### Inventory System
-- Limited inventory space
-- Item descriptions
-- Combinable items
-- Context-sensitive use
+> use radio in observation post
+You set up the radio and begin scanning frequencies...
 
-### Location System
-Each location has:
-- Detailed description
-- Available exits
-- Historical notes
-- Unique items
+> use developed photo with cipher key
+Comparing the photo with the cipher key reveals a hidden message!
+```
 
-### Puzzle System
-Various puzzles including:
-- Code breaking
-- Radio scanning
-- Surveillance
-- Item combinations
+### Puzzle Solutions
 
-## Gameplay Tips
+#### Radio Frequency Puzzle Example:
+```
+> examine radio
+The radio can tune to different frequencies. A note mentions "7.15"...
 
-### Investigation
-1. Examine everything
-2. Take notes
-3. Try items in different places
-4. Learn location history
+> tune radio to 7.15
+Static crackles, then a voice emerges: "Package arriving at midnight..."
 
-### Puzzle Solving
-1. Read all clues
-2. Check inventory
-3. Consider combinations
-4. Review historical notes
+> note frequency in notebook
+You record the frequency and message in your notebook.
+```
 
-### Navigation
-1. Map your progress
-2. Note locked areas
-3. Remember requirements
-4. Use the trolley
+#### Code Breaking Example:
+```
+> examine cipher message
+The message contains repeating patterns of numbers: 3-15-4-5...
 
-### Save Management
-1. Save often
-2. Use multiple slots
-3. Save before puzzles
-4. Keep recent saves
+> use decoder ring
+Setting the decoder ring to position 3, you begin to decrypt:
+"MEET AT SMITH TOWER"...
+```
 
-## Common Questions
+#### Trolley System Navigation:
+```
+> check trolley schedule
+Current Routes:
+- Downtown Loop (Stops: Central, Pike, Union)
+- Harbor Line (Stops: Waterfront, Warehouse, Docks)
 
-### Game Progress
-Q: How do I know if I'm making progress?
-A: Check your inventory and completed tasks.
+> board trolley
+You board the Downtown Loop trolley.
 
-### Stuck Places
-Q: I'm stuck, what should I do?
-A: Examine everything, check inventory, review notes.
+> ask conductor about Pike Street
+"Pike Street? That's where all those suspicious deliveries have been..."
+```
 
-### Save Issues
-Q: Where are my saves?
-A: In the 'saves' directory of the game folder.
+### Advanced Gameplay Examples
 
-### Commands
-Q: What commands are available?
-A: Type 'help' for a full list.
+#### Surveillance Operation:
+```
+> set up observation post
+You establish a hidden vantage point overlooking the warehouse entrance.
 
-## Troubleshooting
+> use binoculars
+Through the binoculars, you observe workers moving crates under cover of darkness.
 
-### Game Won't Start
-1. Check Python version
-2. Verify installation
-3. Check permissions
-4. Review error message
+> photograph suspicious activity
+You capture photos of the workers and license plates.
+```
 
-### Save Problems
-1. Check disk space
-2. Verify permissions
-3. Use different name
-4. Check save directory
+#### Environmental Puzzle:
+```
+> examine broken window
+The window is shattered, with glass shards scattered below.
 
-### Command Issues
-1. Check spelling
-2. Try variations
-3. Read help text
-4. Check requirements
+> use gloves
+Wearing gloves, you carefully examine the glass fragments.
 
-### Display Problems
-1. Check terminal size
-2. Update terminal
-3. Resize window
-4. Check settings
+> analyze break pattern
+The break pattern suggests the window was broken from the inside out...
+```
 
-## Game Progress
+#### Historical Investigation:
+```
+> research Smith Tower history
+You learn about the building's significance in 1947 Seattle...
 
-### Beginning
-1. Start at police station
-2. Gather initial items
-3. Learn basic mechanics
-4. Explore nearby areas
+> ask librarian about newspaper archives
+The librarian directs you to articles about recent suspicious activities...
 
-### Middle Game
-1. Solve initial puzzles
-2. Gather key evidence
-3. Explore more areas
-4. Use the trolley
+> cross-reference dates
+The dates of the suspicious activities align with your other evidence!
+```
 
-### Late Game
-1. Connect clues
-2. Solve major puzzles
-3. Access restricted areas
-4. Complete investigation
+## Game Progress Tips
 
-## Historical Notes
+### Case Development Example:
+```
+Initial Clue:
+> examine police report
+A report of suspicious activity at Smith Tower...
 
-### 1947 Seattle
-- Post-war period
-- Growing city
-- Historical landmarks
-- Cultural changes
+Following Lead:
+> interview security guard
+"I saw strange lights in the tower late at night..."
 
-### Locations
-Each area includes:
-- Historical facts
-- Period details
-- Cultural notes
-- Architectural info
+Gathering Evidence:
+> photograph night activities
+You document unusual patterns of movement...
 
-## Support
+Connecting Dots:
+> compare photos with schedules
+The activities match the pattern in your decoded messages!
+```
 
-### Getting Help
-- Check this guide
-- Read in-game help
-- Check save files
-- Contact support
+### Evidence Collection Best Practices:
+1. Document everything in your notebook
+   ```
+   > write in notebook
+   Added observation about suspicious lights to case notes...
+   ```
 
-### Reporting Issues
-Include:
-- Game version
-- Error message
-- Save file
-- Steps to reproduce
+2. Photograph key scenes
+   ```
+   > photograph crime scene
+   You take detailed photos of the disturbance...
+   ```
 
-## Updates
-Check for updates:
-- Game website
-- Release notes
-- Patch notes
-- New features
+3. Collect physical evidence
+   ```
+   > bag evidence
+   You carefully collect and label the suspicious substance...
+   ```
+
+## Troubleshooting Common Issues
+
+### Command Recognition:
+If a command isn't working, try rephrasing:
+```
+Instead of:
+> use key with door
+Try:
+> unlock door
+or
+> insert key into lock
+```
+
+### Navigation Help:
+If you're lost:
+```
+> check map
+Displays available locations and current position...
+
+> review notes
+Shows your documented locations and clues...
+```
+
+### Puzzle Assistance:
+When stuck on a puzzle:
+```
+> examine clues
+Reviews all relevant clues in your notebook...
+
+> review evidence
+Displays collected evidence and possible connections...
+```
+
+## Support and Additional Help
+
+### Saving Progress:
+```
+> save game mysterious_lights
+Game saved as "mysterious_lights.save"
+
+> load game mysterious_lights
+Loading previous investigation progress...
+```
+
+### Getting Help:
+```
+> help
+Displays this guide of commands...
+
+> hint
+Provides a subtle hint about your current objective...
+```
+
+Remember, Emerald Shadows rewards thorough investigation and creative thinking. Take your time, examine everything, and maintain detailed notes. The truth behind the mysterious activities in post-war Seattle awaits your discovery!
