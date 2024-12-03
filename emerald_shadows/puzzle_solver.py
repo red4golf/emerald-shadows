@@ -3,7 +3,7 @@
 Handles puzzle logic, validation, and solutions.
 """
 
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, Tuple
 import logging
 from .config import PUZZLE_REQUIREMENTS, GAME_MESSAGES
 
@@ -64,15 +64,21 @@ class PuzzleSolver:
         
     def _handle_radio_puzzle(self, solution: str) -> tuple[bool, str]:
         """Handle radio frequency puzzle."""
-        # TODO: Implement radio puzzle logic
-        pass
+        from .config import PUZZLE_SOLUTIONS
+        if solution == PUZZLE_SOLUTIONS["radio_puzzle"]["frequency"]:
+            return True, PUZZLE_SOLUTIONS["radio_puzzle"]["success_message"]
+        return False, PUZZLE_SOLUTIONS["radio_puzzle"]["fail_message"]
         
     def _handle_cipher_puzzle(self, solution: str) -> tuple[bool, str]:
         """Handle cipher decryption puzzle."""
-        # TODO: Implement cipher puzzle logic
-        pass
+        from .config import PUZZLE_SOLUTIONS
+        if solution.upper() == PUZZLE_SOLUTIONS["cipher_puzzle"]["key"]:
+            return True, PUZZLE_SOLUTIONS["cipher_puzzle"]["success_message"]
+        return False, PUZZLE_SOLUTIONS["cipher_puzzle"]["fail_message"]
         
     def _handle_morse_puzzle(self, solution: str) -> tuple[bool, str]:
         """Handle Morse code puzzle."""
-        # TODO: Implement Morse code puzzle logic
-        pass
+        from .config import PUZZLE_SOLUTIONS
+        if solution.upper() == "WAREHOUSE 22":
+            return True, PUZZLE_SOLUTIONS["morse_code"]["success_message"]
+        return False, PUZZLE_SOLUTIONS["morse_code"]["fail_message"]
