@@ -135,3 +135,20 @@ def validate_config() -> None:
 
 # Run validation on module import
 validate_config()
+# Puzzle Requirements
+PUZZLE_REQUIREMENTS = {
+    "warehouse_office": {"description": "Solve the radio puzzle.", "items": ["radio"]},
+    "evidence_room": {"description": "Decrypt the cipher.", "items": ["cipher_wheel"]},
+    "underground_tunnels": {"description": "Decode the Morse code.", "items": ["morse_code_manual"]}
+}
+
+
+# Game Messages
+GAME_MESSAGES = {
+    "NO_PUZZLE": "No puzzle available at this location.",
+    "MISSING_ITEMS": "You are missing the following items: {items}.",
+    "ALREADY_SOLVED": "This puzzle has already been solved.",
+    "NO_PUZZLES_AVAILABLE": "No puzzles are available to solve.",
+    "NO_HANDLER": "No handler for puzzle at location: "
+}
+

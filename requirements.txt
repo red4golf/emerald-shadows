@@ -1,6 +1,5 @@
 # Core dependencies
 typing>=3.7.4
-logging>=0.5.1.2
 
 # Testing dependencies
 pytest>=7.4.0
