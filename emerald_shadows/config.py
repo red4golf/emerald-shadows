@@ -114,6 +114,39 @@ MAX_MESSAGE_LENGTH: Final[int] = 1000
 MAX_PUZZLE_ATTEMPTS: Final[int] = 3
 PUZZLE_TIMEOUT: Final[int] = 300  # seconds
 
+# Puzzle configuration placeholders used by the simplified puzzle solver
+PUZZLE_REQUIREMENTS: Final[Dict[str, Dict[str, list[str] | str]]] = {
+    "warehouse_office": {
+        "radio": ["radio_manual"],
+        "description": "Stacks of radio equipment hum softly."
+    }
+}
+
+GAME_MESSAGES: Final[Dict[str, str]] = {
+    "NO_PUZZLE": "There are no puzzles here.",
+    "MISSING_ITEMS": "You need {items} to solve this puzzle.",
+    "NO_PUZZLES_AVAILABLE": "No puzzles can be solved right now.",
+    "NO_HANDLER": "No handler for ",
+    "ALREADY_SOLVED": "Already solved."
+}
+
+PUZZLE_SOLUTIONS: Final[Dict[str, Dict[str, str]]] = {
+    "radio_puzzle": {
+        "frequency": "440",
+        "success_message": "The radio crackles to life, broadcasting a secret jazz set.",
+        "fail_message": "Only static answers you.",
+    },
+    "cipher_puzzle": {
+        "key": "SEATTLE",
+        "success_message": "You crack the code, revealing a warehouse address.",
+        "fail_message": "The cipher remains unsolved.",
+    },
+    "morse_code": {
+        "success_message": "Dots and dashes reveal the phrase 'WAREHOUSE 22'.",
+        "fail_message": "That doesn't sound right.",
+    },
+}
+
 def validate_config() -> None:
     """Validate configuration settings."""
     # Validate game states

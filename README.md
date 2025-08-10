@@ -21,6 +21,9 @@ Emerald Shadows is a detective text adventure game set in 1947 post-war Seattle.
 
 Run the game: `python -m emerald_shadows`
 
+Or try the lightweight noir sandbox inspired by classic Zork:
+`python -m emerald_shadows.noir_zork -p`
+
 See the [User Guide](docs/user_guide.md) for detailed instructions.
 
 ## Contributing
