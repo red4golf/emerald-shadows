@@ -7,12 +7,14 @@ Welcome to Emerald Shadows, a text adventure game set in 1947 post-war Seattle. 
 ### Installation
 
 1. Make sure you have Python 3.8 or newer installed
-2. Install the game:
+2. Clone the repository and install it (editable mode recommended during development):
    ```bash
-   pip install emerald-shadows
+   pip install -e .
    ```
 3. Start the game:
    ```bash
+   python -m emerald_shadows
+   # or just run
    emerald-shadows
    ```
 

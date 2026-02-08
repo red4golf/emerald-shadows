@@ -17,6 +17,8 @@ from .commands.natural_commands import NaturalCommandHandler
 from .utils import SaveLoadManager, print_text, clear_screen
 from .game_art import display_title_screen
 
+TROLLEY_COMMANDS = {"next", "off", "status", "history"}
+
 class GameManager:
     """Main game manager class handling game state and core gameplay loop."""
     
@@ -68,6 +70,13 @@ class GameManager:
             
         command_type, args = self.command_handler.understand_command(command)
         
+        if not command_type:
+            return True
+        
+        if command_type in TROLLEY_COMMANDS:
+            self._handle_trolley_command(command_type)
+            return True
+        
         if command_type not in BASIC_COMMANDS and command_type not in COMPLEX_COMMANDS:
             logging.warning(f"Invalid command type received: {command_type}")
             print_text("I don't understand that command. Type 'help' for available commands.")
@@ -81,7 +90,10 @@ class GameManager:
             "save": self._handle_save,
             "load": self._handle_load,
             "solve": self._handle_puzzle,
-            "help": self._handle_help
+            "help": self._handle_help,
+            "look": self._handle_look,
+            "use": self._handle_use_item,
+            "combine": self._handle_combine_items
         }
         
         if command_type in handlers:
@@ -104,9 +116,29 @@ class GameManager:
         available_items = self.location_manager.get_available_items()
         self.item_manager.examine_item(item, available_items, self.game_state)
 
+    def _handle_look(self, _: Any) -> None:
+        """Describe the current location."""
+        description = self.location_manager.get_location_description()
+        print_text("\n" + description)
+
     def _handle_inventory(self, _: Any) -> None:
         """Handle inventory command."""
         self.item_manager.show_inventory()
+
+    def _handle_use_item(self, item: str) -> None:
+        """Handle using an inventory item."""
+        if not item:
+            print_text("Use what?")
+            return
+        self.item_manager.use_item(item, self.location_manager.current_location, self.game_state)
+
+    def _handle_combine_items(self, items: str) -> None:
+        """Handle combining inventory items."""
+        item1, item2 = self._parse_combine_args(items)
+        if not item1 or not item2:
+            print_text("Combine which items? Try 'combine notebook with cipher wheel'.")
+            return
+        self.item_manager.combine_items(item1, item2, self.game_state)
 
     def _handle_save(self, _: Any) -> None:
         """Handle save command."""
@@ -144,6 +176,10 @@ class GameManager:
     def _handle_help(self, _: Any) -> None:
         """Display help information."""
         self.show_help()
+
+    def _handle_trolley_command(self, command: str) -> None:
+        """Route trolley-specific commands to the location manager."""
+        self.location_manager.handle_trolley_command(command)
 
     def handle_quit(self) -> bool:
         """Handle quit command and return False to end game."""
@@ -198,6 +234,20 @@ class GameManager:
             print_text("\nAn error occurred. The game has been auto-saved.")
             self.save_load_manager.save_game(self, "error_save")
             raise
+
+    def _parse_combine_args(self, items: str) -> Tuple[str, str]:
+        """Parse user input for the combine command."""
+        if not items:
+            return "", ""
+        lowered = items.lower()
+        for separator in (" with ", " and "):
+            if separator in lowered:
+                left, right = lowered.split(separator, 1)
+                return left.strip(), right.strip()
+        parts = lowered.split()
+        if len(parts) >= 2:
+            return parts[0], " ".join(parts[1:]).strip()
+        return "", ""
 
     def show_help(self) -> None:
         """Display help information."""

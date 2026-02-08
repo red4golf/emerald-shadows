@@ -178,13 +178,13 @@ class SaveLoadManager:
             if not save_name:
                 save_name = f"autosave_{int(time.time())}"
             
+            location_state = game_instance.location_manager.get_state()
             save_data = {
                 'save_name': save_name,
                 'save_date': datetime.now().isoformat(),
                 'version': "1.0.0",
                 'game_state': game_instance.game_state,
-                'current_location': game_instance.current_location,
-                'location_states': game_instance.location_manager.get_location_states(),
+                'location_state': location_state,
                 'inventory_state': game_instance.item_manager.get_inventory_state()
             }
             
@@ -212,17 +212,13 @@ class SaveLoadManager:
                 save_data = json.load(f)
 
             # Verify save data structure
-            required_keys = {'game_state', 'current_location', 'location_states', 'inventory_state'}
+            required_keys = {'game_state', 'location_state', 'inventory_state'}
             if not all(key in save_data for key in required_keys):
                 raise ValueError("Save file is missing required data")
 
             # Restore game state
             game_instance.game_state = save_data['game_state']
-            game_instance.current_location = save_data['current_location']
-            
-            # Restore location states
-            game_instance.location_manager.current_location = save_data['current_location']
-            game_instance.location_manager.restore_location_states(save_data['location_states'])
+            game_instance.location_manager.restore_state(save_data['location_state'])
             
             # Restore inventory
             game_instance.item_manager.restore_inventory_state(save_data['inventory_state'])
@@ -241,10 +237,12 @@ class SaveLoadManager:
             try:
                 with open(save_file, 'r') as f:
                     save_data = json.load(f)
+                location_state = save_data.get('location_state', {})
+                current_location = location_state.get('current_location', 'unknown')
                 saves.append({
-                    'name': save_data['save_name'],
-                    'date': save_data['save_date'],
-                    'location': save_data['current_location'],
+                    'name': save_data.get('save_name', save_file.stem),
+                    'date': save_data.get('save_date', 'unknown'),
+                    'location': current_location,
                     'file_path': str(save_file)
                 })
             except Exception as e:

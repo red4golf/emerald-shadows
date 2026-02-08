@@ -6,6 +6,7 @@ import logging
 class TrolleyState:
     position: int
     in_motion: bool
+    on_trolley: bool
     last_stop: Optional[str] = None
 
 class TrolleySystem:
@@ -34,9 +35,18 @@ class TrolleySystem:
             }
         }
         self.in_motion = False
+        self.on_trolley = False
         self.last_stop = None
 
+    @property
+    def current_stop(self) -> int:
+        return self.position
+
     def board_trolley(self) -> str:
+        if self.on_trolley:
+            return ""
+        self.on_trolley = True
+        self.in_motion = False
         return """
         You board the electric trolley. The wooden seats and brass fixtures speak to an earlier era.
         
@@ -53,28 +63,51 @@ class TrolleySystem:
         Downtown → Pioneer Square → Waterfront → Smith Tower
         """
 
+    def _advance_position(self) -> None:
+        if self.position < len(self.routes) - 1:
+            self.position += 1
+        else:
+            self.position = 0
+        self.last_stop = self.routes[self.position]['description']
+
     def handle_movement(self) -> Tuple[str, Dict[str, str]]:
         try:
             current_stop = self.routes[self.position]
-            self.last_stop = current_stop['description']
             
             if self.in_motion:
                 self.in_motion = False
+                self.last_stop = current_stop['description']
                 return (f"\nThe trolley arrives at: {current_stop['description']}\n"
                        f"You can type 'off' to exit or 'next' to continue."), current_stop['exits']
             
             self.in_motion = True
-            if self.position < 3:
-                self.position += 1
-            else:
-                self.position = 0
-                
+            self._advance_position()
+            next_stop = self.routes[self.position]
             return ("\nThe trolley begins moving to the next stop...",
-                    {"next": "trolley", "off": current_stop['exits']['off']})
+                    {"next": "trolley", "off": next_stop['exits']['off']})
                     
         except Exception as e:
             logging.error(f"Error in trolley movement: {e}")
             return "There was a problem with the trolley. Please try again.", {"off": "pike_place"}
+
+    def exit_trolley(self) -> Optional[str]:
+        if not self.on_trolley:
+            return None
+        self.on_trolley = False
+        self.in_motion = False
+        return self.routes[self.position]['exits']['off']
+
+    def next_stop(self) -> bool:
+        if not self.on_trolley:
+            return False
+        self._advance_position()
+        return True
+
+    def get_stop_description(self) -> str:
+        if not self.on_trolley:
+            return "You are not on the trolley."
+        current_stop = self.routes[self.position]
+        return f"Stop {self.position + 1}: {current_stop['description']}"
 
     def get_status(self) -> str:
         try:
@@ -107,10 +140,12 @@ class TrolleySystem:
         return TrolleyState(
             position=self.position,
             in_motion=self.in_motion,
+            on_trolley=self.on_trolley,
             last_stop=self.last_stop
         )
 
     def restore_state(self, state: TrolleyState) -> None:
         self.position = state.position
         self.in_motion = state.in_motion
+        self.on_trolley = state.on_trolley
         self.last_stop = state.last_stop

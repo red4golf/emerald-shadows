@@ -14,8 +14,9 @@ Emerald Shadows is a detective text adventure game set in 1947 post-war Seattle.
 ## Installation
 
 1. Clone the repository
-2. Create a virtual environment (recommended)
-3. Install dependencies: `pip install -r requirements.txt`
+2. (Recommended) create and activate a virtual environment
+3. Install Emerald Shadows: `pip install -e .`
+4. For development/test tools install the extras: `pip install -r requirements.txt`
 
 ## Usage
 

@@ -114,6 +114,46 @@ MAX_MESSAGE_LENGTH: Final[int] = 1000
 MAX_PUZZLE_ATTEMPTS: Final[int] = 3
 PUZZLE_TIMEOUT: Final[int] = 300  # seconds
 
+PUZZLE_REQUIREMENTS: Final[Dict[str, Dict[str, Any]]] = {
+    "warehouse_office": {
+        "description": "You unfold the seized radio equipment and tune its broken dials.",
+        "radio": ["radio_manual"],
+    },
+    "evidence_room": {
+        "description": "The cipher wheel and coded notes beg to be decoded.",
+        "cipher": ["cipher_wheel", "notebook"],
+    },
+    "underground_tunnels": {
+        "description": "In the dripping tunnels you tap out Morse to your contacts.",
+        "morse": ["flashlight"],
+    },
+}
+
+PUZZLE_SOLUTIONS: Final[Dict[str, Dict[str, str]]] = {
+    "radio_puzzle": {
+        "frequency": "415.6",
+        "success_message": "You lock onto 415.6 MHz—smugglers chatter floods your headphones.",
+        "fail_message": "Static sputters. That frequency is dead tonight.",
+    },
+    "cipher_puzzle": {
+        "key": "ANGELS",
+        "success_message": "The cipher wheel clicks—'ANGELS' unlocks the entire memo.",
+        "fail_message": "The letters refuse to line up; that key isn't right.",
+    },
+    "morse_code": {
+        "success_message": "Your Morse reply sends a patrol to Warehouse 22 immediately.",
+        "fail_message": "You mis-tap the code and only echoes answer back.",
+    },
+}
+
+GAME_MESSAGES: Final[Dict[str, str]] = {
+    "NO_PUZZLE": "There are no puzzles to solve here.",
+    "MISSING_ITEMS": "You need {items} before you can tackle this puzzle.",
+    "ALREADY_SOLVED": "You've already solved this puzzle.",
+    "NO_PUZZLES_AVAILABLE": "You don't have the right tools to work this puzzle yet.",
+    "NO_HANDLER": "No handler registered for puzzle at ",
+}
+
 def validate_config() -> None:
     """Validate configuration settings."""
     # Validate game states
