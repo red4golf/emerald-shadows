@@ -5,7 +5,18 @@ import sys
 from pathlib import Path
 from typing import Optional
 from .game_manager import GameManager
-from .config import LOG_FILE, LOG_FORMAT, SAVE_DIR
+from .config import LOG_FILE, LOG_FORMAT, SAVE_DIR, check_filesystem
+
+def _enable_utf8_output() -> None:
+    """Make stdout/stderr render the game's Unicode art on Windows consoles that
+    default to a legacy code page (cp1252). Without this, printing the title art
+    raises UnicodeEncodeError at startup. Best-effort and safe to no-op."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
 
 def setup_logging() -> logging.Handler:
     """
@@ -44,7 +55,9 @@ def main() -> None:
     handler = None
     try:
         # Setup
+        _enable_utf8_output()
         ensure_directories()
+        check_filesystem()
         handler = setup_logging()
         logging.info("Starting Emerald Shadows")
         

@@ -32,14 +32,27 @@ INITIAL_GAME_STATE: Final[Dict[str, Any]] = {
     "has_badge": False,
     "examined_cipher": False,
     "discovered_suspect": False,
-    
+
     # Major plot points
     "decoded_notes": False,
     "found_emergency_frequency": False,
     "observed_activity": False,
+    "surveilled_docks": False,
     "found_warehouse": False,
     "found_all_notes": False,
-    "identified_organization": False
+    "identified_organization": False,
+    "identified_suspect": False,
+    "identified_vehicle": False,
+
+    # Darkness / grue tracking
+    "flashlight_lit": False,
+    "dark_turns": 0,
+
+    # Darkness / grue tracking (continued)
+    "ches_tip": False,
+
+    # Scoring
+    "score": 0,
 }
 
 # Required Items for Game Completion
@@ -48,7 +61,10 @@ REQUIRED_ITEMS: Final[Set[str]] = frozenset({
     "notebook",
     "badge",
     "binoculars",
-    "radio_manual"
+    "radio_manual",
+    "photo",
+    "meeting_minutes",
+    "manifest",
 })
 
 # Required Game States for Completion
@@ -56,8 +72,12 @@ REQUIRED_STATES: Final[Set[str]] = frozenset({
     "decoded_notes",
     "found_emergency_frequency",
     "observed_activity",
+    "surveilled_docks",
     "found_warehouse",
-    "identified_organization"
+    "identified_organization",
+    "identified_suspect",
+    "identified_vehicle",
+    "ches_tip",
 })
 
 # Game Settings
@@ -88,17 +108,17 @@ TERMINAL: Final[TerminalSettings] = TerminalSettings()
 BASIC_COMMANDS: Final[Set[str]] = frozenset({
     # Navigation
     "look", "north", "south", "east", "west", "up", "down",
-    
+
     # Inventory
     "inventory", "i",
-    
+
     # Game Control
-    "help", "quit", "save", "load"
+    "help", "quit", "save", "load", "score"
 })
 
 COMPLEX_COMMANDS: Final[Set[str]] = frozenset({
     # Action Commands
-    "go", "take", "examine", "use", "combine", "solve"
+    "go", "take", "examine", "use", "combine", "solve", "drop"
 })
 
 # Validate command sets
@@ -113,21 +133,6 @@ MAX_MESSAGE_LENGTH: Final[int] = 1000
 # Puzzle Settings
 MAX_PUZZLE_ATTEMPTS: Final[int] = 3
 PUZZLE_TIMEOUT: Final[int] = 300  # seconds
-
-PUZZLE_REQUIREMENTS: Final[Dict[str, Dict[str, Any]]] = {
-    "warehouse_office": {
-        "description": "You unfold the seized radio equipment and tune its broken dials.",
-        "radio": ["radio_manual"],
-    },
-    "evidence_room": {
-        "description": "The cipher wheel and coded notes beg to be decoded.",
-        "cipher": ["cipher_wheel", "notebook"],
-    },
-    "underground_tunnels": {
-        "description": "In the dripping tunnels you tap out Morse to your contacts.",
-        "morse": ["flashlight"],
-    },
-}
 
 PUZZLE_SOLUTIONS: Final[Dict[str, Dict[str, str]]] = {
     "radio_puzzle": {
@@ -147,31 +152,31 @@ PUZZLE_SOLUTIONS: Final[Dict[str, Dict[str, str]]] = {
 }
 
 GAME_MESSAGES: Final[Dict[str, str]] = {
-    "NO_PUZZLE": "There are no puzzles to solve here.",
-    "MISSING_ITEMS": "You need {items} before you can tackle this puzzle.",
-    "ALREADY_SOLVED": "You've already solved this puzzle.",
-    "NO_PUZZLES_AVAILABLE": "You don't have the right tools to work this puzzle yet.",
+    "NO_PUZZLE": "Nothing here calls for that kind of attention. Keep moving.",
+    "MISSING_ITEMS": "You're not ready for this yet. You still need: {items}.",
+    "ALREADY_SOLVED": "You've already worked that one. Don't second-guess yourself.",
+    "NO_PUZZLES_AVAILABLE": "You don't have what you need. Diamond doesn't bluff.",
     "NO_HANDLER": "No handler registered for puzzle at ",
 }
 
 def validate_config() -> None:
-    """Validate configuration settings."""
-    # Validate game states
+    """Validate configuration constants for internal consistency."""
     for state in REQUIRED_STATES:
         if state not in INITIAL_GAME_STATE:
             raise ValueError(f"Required state '{state}' not found in initial game state")
-    
-    # Validate paths
-    if not os.access(SAVE_DIR.parent, os.W_OK):
-        raise PermissionError(f"Cannot write to save directory: {SAVE_DIR}")
-    if not os.access(LOG_DIR.parent, os.W_OK):
-        raise PermissionError(f"Cannot write to log directory: {LOG_DIR}")
-    
-    # Validate intervals
     if AUTO_SAVE_INTERVAL < 60:
         raise ValueError("Auto-save interval must be at least 60 seconds")
     if MAX_SAVE_DIR_SIZE_MB < 1:
         raise ValueError("Maximum save directory size must be at least 1 MB")
 
-# Run validation on module import
+
+def check_filesystem() -> None:
+    """Check that save and log directories are writable. Call at startup, not import."""
+    if not os.access(SAVE_DIR.parent, os.W_OK):
+        raise PermissionError(f"Cannot write to save directory: {SAVE_DIR}")
+    if not os.access(LOG_DIR.parent, os.W_OK):
+        raise PermissionError(f"Cannot write to log directory: {LOG_DIR}")
+
+
+# Validate constants at import time (pure logic checks only — no I/O)
 validate_config()

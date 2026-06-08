@@ -39,6 +39,85 @@ class TestNaturalCommandHandler:
         assert command == ""
         assert argument == ""
 
+    # ------------------------------------------------------------------
+    # "pick up X" variants — the "up" prefix must be stripped
+    # ------------------------------------------------------------------
+
+    def test_pick_up_badge(self):
+        command, argument = self.handler.understand_command("pick up badge")
+        assert command == "take"
+        assert argument == "badge"
+
+    def test_pick_up_with_article(self):
+        command, argument = self.handler.understand_command("pick up the note")
+        assert command == "take"
+        assert argument == "note"
+
+    def test_pick_up_multiword_item(self):
+        command, argument = self.handler.understand_command("pick up radio manual")
+        assert command == "take"
+        assert argument == "radio manual"
+
+    def test_pick_bare_item_no_up(self):
+        """'pick badge' (no 'up') should still parse as take."""
+        command, argument = self.handler.understand_command("pick badge")
+        assert command == "take"
+        assert argument == "badge"
+
+    def test_get_up_item_not_stripped(self):
+        """'get up' is not a valid take target but should not crash."""
+        command, argument = self.handler.understand_command("get up")
+        assert command == "take"
+        # "up" with no trailing noun — argument will be empty or "up";
+        # either way the game will print "Take what?" safely.
+        # We just verify no exception is raised and command is correct.
+
+    # ------------------------------------------------------------------
+    # "look at X" — ensure article stripping applies
+    # ------------------------------------------------------------------
+
+    def test_look_at_with_article(self):
+        command, argument = self.handler.understand_command("look at the badge")
+        assert command == "examine"
+        assert argument == "badge"
+
+    def test_look_at_no_article(self):
+        command, argument = self.handler.understand_command("look at notebook")
+        assert command == "examine"
+        assert argument == "notebook"
+
+    # ------------------------------------------------------------------
+    # score alias
+    # ------------------------------------------------------------------
+
+    def test_score_single_word(self):
+        command, argument = self.handler.understand_command("score")
+        assert command == "score"
+        assert argument == ""
+
+    # ------------------------------------------------------------------
+    # read alias → examine
+    # ------------------------------------------------------------------
+
+    def test_read_alias_becomes_examine(self):
+        command, argument = self.handler.understand_command("read notebook")
+        assert command == "examine"
+        assert argument == "notebook"
+
+    # ------------------------------------------------------------------
+    # drop aliases
+    # ------------------------------------------------------------------
+
+    def test_drop_alias(self):
+        command, argument = self.handler.understand_command("drop badge")
+        assert command == "drop"
+        assert argument == "badge"
+
+    def test_leave_alias(self):
+        command, argument = self.handler.understand_command("leave notebook")
+        assert command == "drop"
+        assert argument == "notebook"
+
 
 class TestInputValidator:
     def test_validate_puzzle_input_accepts_alpha(self):

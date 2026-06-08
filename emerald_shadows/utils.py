@@ -11,13 +11,6 @@ from dataclasses import dataclass, asdict
 from datetime import datetime
 from pathlib import Path
 
-# Configure root logger
-logging.basicConfig(
-    filename='emerald_shadows.log',
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-
 logger = logging.getLogger(__name__)
 
 class DisplayManager:
@@ -286,17 +279,16 @@ class ErrorHandler:
             sys.exit(1)
 
 def validate_input(func):
-    """Decorator for input validation."""
+    """Decorator that rejects calls where any string argument is blank."""
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
-            # Validate string arguments
             for arg in args:
                 if isinstance(arg, str) and not arg.strip():
-                    logger.warning("Empty input provided")
-                    return True
+                    logger.warning("Empty input provided to %s", func.__name__)
+                    return None
             return func(*args, **kwargs)
         except Exception as e:
-            logger.error(f"Error in {func.__name__}: {e}")
-            return True
+            logger.error("Error in %s: %s", func.__name__, e)
+            return None
     return wrapper

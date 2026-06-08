@@ -19,6 +19,7 @@ class Location:
     first_visit: bool = True
     requires: Optional[str] = None
     historical_note: Optional[str] = None
+    dark: bool = False
 
 class LocationError(Exception):
     """Custom exception for location-related errors."""
@@ -49,7 +50,8 @@ class LocationManager:
                     items=data.get("items", []).copy(),
                     first_visit=True,
                     requires=data.get("requires"),
-                    historical_note=data.get("historical_note")
+                    historical_note=data.get("historical_note"),
+                    dark=data.get("dark", False)
                 )
                 self.locations[name] = location
                 self.original_items[name] = data.get("items", []).copy()
@@ -159,19 +161,24 @@ class LocationManager:
     def _handle_trolley_movement(self) -> bool:
         """Handle special case of trolley movement."""
         try:
+            boarding_from = self.current_location
             self.current_location = "trolley"
             trolley_location = self.locations["trolley"]
-            
-            # First boarding
+
+            # Snap trolley to the stop nearest the boarding location
+            self.trolley.set_boarding_position(boarding_from)
+
             if trolley_location.first_visit:
                 trolley_location.first_visit = False
                 print_text(self.trolley.board_trolley())
-                initial_exits = {"next": "trolley", "off": self.trolley.routes[0]["exits"]["off"]}
-                trolley_location.exits = initial_exits
-                return True
-            
+
+            current_stop = self.trolley.routes[self.trolley.position]
+            trolley_location.exits = {
+                "next": "trolley",
+                "off": current_stop["exits"]["off"],
+            }
             return True
-            
+
         except Exception as e:
             logging.error(f"Error handling trolley movement: {e}")
             print_text("There was a problem with the trolley system.")
@@ -235,6 +242,21 @@ class LocationManager:
                 logging.info(f"Removed {item} from {self.current_location}")
         except Exception as e:
             logging.error(f"Error removing item {item} from {self.current_location}: {e}")
+
+    def add_item(self, item: str) -> None:
+        """Add an item to the current location (e.g. when dropped)."""
+        try:
+            self.locations[self.current_location].items.append(item)
+            logging.info(f"Added {item} to {self.current_location}")
+        except Exception as e:
+            logging.error(f"Error adding item {item} to {self.current_location}: {e}")
+
+    def is_dark(self) -> bool:
+        """Return True if the current location is dark."""
+        try:
+            return self.locations[self.current_location].dark
+        except KeyError:
+            return False
 
     def get_location_states(self) -> Dict[str, Dict[str, Any]]:
         """Get the current state of all locations."""

@@ -4,6 +4,17 @@ from __future__ import annotations
 
 from typing import Dict, Tuple
 
+_ARTICLES = {"the", "a", "an"}
+
+
+def _strip_articles(text: str) -> str:
+    """Remove leading articles from a noun phrase: 'the note' -> 'note'."""
+    words = text.split()
+    if words and words[0] in _ARTICLES:
+        words = words[1:]
+    return " ".join(words)
+
+
 class NaturalCommandHandler:
     """Translate player input into normalized commands the game understands."""
 
@@ -36,7 +47,8 @@ class NaturalCommandHandler:
             "exit": "quit",
             "help": "help",
             "save": "save",
-            "load": "load"
+            "load": "load",
+            "score": "score",
         }
 
         self.verb_aliases: Dict[str, str] = {
@@ -50,11 +62,16 @@ class NaturalCommandHandler:
             "pick": "take",
             "examine": "examine",
             "inspect": "examine",
+            "read": "examine",
             "look": "look",
             "use": "use",
             "combine": "combine",
             "mix": "combine",
-            "solve": "solve"
+            "solve": "solve",
+            "drop": "drop",
+            "leave": "drop",
+            "put": "drop",
+            "discard": "drop",
         }
 
         self.trolley_commands = {"next", "off", "status", "history"}
@@ -75,7 +92,12 @@ class NaturalCommandHandler:
         if first_word in self.trolley_commands:
             return first_word, ""
 
-        # Single word commands (inventory, help, look, etc.)
+        # "look at <item>" → examine <item>
+        if command.startswith("look at "):
+            noun = _strip_articles(command[len("look at "):].strip())
+            return "examine", noun
+
+        # Single word commands (inventory, help, look, score, etc.)
         if command in self.single_word_aliases:
             return self.single_word_aliases[command], ""
 
@@ -83,7 +105,7 @@ class NaturalCommandHandler:
         if first_word in self.direction_aliases and len(words) == 1:
             return "go", self.direction_aliases[first_word]
 
-        # Explicit "go" commands or synonyms
+        # Explicit "go" commands or direction synonyms
         if first_word in self.direction_aliases:
             return "go", self.direction_aliases[first_word]
 
@@ -91,7 +113,9 @@ class NaturalCommandHandler:
         if not verb:
             return "", ""
 
-        argument = command[len(first_word):].strip()
+        argument = _strip_articles(command[len(first_word):].strip())
         if verb == "go" and argument.startswith("to "):
             argument = argument[3:].strip()
+        if verb == "take" and argument.startswith("up "):
+            argument = _strip_articles(argument[3:].strip())
         return verb, argument
