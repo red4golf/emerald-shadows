@@ -41,6 +41,8 @@ def _make_game_instance(game_state=None, location=None):
     }
     instance.item_manager.get_inventory_state.return_value = inv_state
 
+    instance.puzzle_manager.get_state.return_value = {"solved_puzzles": []}
+
     return instance
 
 

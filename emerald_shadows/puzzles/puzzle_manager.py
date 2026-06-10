@@ -76,6 +76,16 @@ class PuzzleManager:
             game_state["score"] = game_state.get("score", 0) + 25
         return solved
 
+    def get_state(self) -> dict:
+        """Get puzzle progress for saving."""
+        return {"solved_puzzles": sorted(self.solved_puzzles)}
+
+    def restore_state(self, state: Optional[dict]) -> None:
+        """Restore puzzle progress from save data. Older saves that predate
+        puzzle persistence have no entry; they restore to nothing solved."""
+        state = state or {}
+        self.solved_puzzles = set(state.get("solved_puzzles", []))
+
     def should_trigger_on_use(self, item: str, location: str) -> bool:
         """Return True if using this item at this location should activate a puzzle."""
         puzzle = _PUZZLE_REGISTRY.get(location)

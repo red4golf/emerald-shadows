@@ -27,7 +27,27 @@ class LocationError(Exception):
 
 class LocationManager:
     """Manages game locations and movement between them."""
-    
+
+    # Common phrasings mapped to the exit names they may stand for. Tried in
+    # order; the first candidate that is an actual exit of the current
+    # location wins. Keeps "o", "out", "up", "board" etc. working wherever
+    # the map uses a near-synonym as the exit key.
+    _EXIT_SYNONYMS: Dict[str, Tuple[str, ...]] = {
+        "o": ("outside", "out"),
+        "out": ("outside",),
+        "outside": ("out",),
+        "up": ("upstairs",),
+        "upstairs": ("up",),
+        "down": ("downstairs",),
+        "downstairs": ("down",),
+        "in": ("enter", "inside"),
+        "inside": ("enter", "in"),
+        "enter": ("inside", "in"),
+        "board": ("trolley",),
+        "tram": ("trolley",),
+        "leave": ("outside", "out", "off"),
+    }
+
     def __init__(self) -> None:
         """Initialize the LocationManager with all game locations and routes."""
         self._initialize_locations()
@@ -86,6 +106,25 @@ class LocationManager:
             logging.error(f"Error getting location description: {e}")
             return "Error: Could not get location description."
     
+    def resolve_exit(self, word: str) -> Optional[str]:
+        """Resolve player input to an exit of the current location.
+
+        Accepts exact exit names ("outside", "north") and common synonyms
+        ("o" -> "outside", "up" -> "upstairs"). Returns the canonical exit
+        name, or None if the word doesn't match a way out of here.
+        """
+        try:
+            exits = self.locations[self.current_location].exits
+        except KeyError:
+            return None
+        word = word.strip().lower()
+        if word in exits:
+            return word
+        for candidate in self._EXIT_SYNONYMS.get(word, ()):
+            if candidate in exits:
+                return candidate
+        return None
+
     def move_to_location(self, direction: str, game_state: Dict) -> bool:
         """
         Attempt to move in the specified direction.
@@ -100,12 +139,13 @@ class LocationManager:
         try:
             self._validate_current_location()
             current_location = self.locations[self.current_location]
-            
-            if direction not in current_location.exits:
+
+            resolved = self.resolve_exit(direction)
+            if resolved is None:
                 print_text("You can't go that way.")
                 return False
 
-            new_location_name = current_location.exits[direction]
+            new_location_name = current_location.exits[resolved]
 
             # Handle trolley as special case
             if new_location_name == "trolley":
