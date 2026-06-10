@@ -107,7 +107,7 @@ TERMINAL: Final[TerminalSettings] = TerminalSettings()
 # Command Sets
 BASIC_COMMANDS: Final[Set[str]] = frozenset({
     # Navigation
-    "look", "north", "south", "east", "west", "up", "down",
+    "look", "north", "south", "east", "west", "up", "down", "exits",
 
     # Inventory
     "inventory", "i",

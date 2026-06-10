@@ -75,6 +75,11 @@ class GameManager:
         command_type, args = self.command_handler.understand_command(command)
 
         if not command_type:
+            # A bare named exit ("outside", "upstairs", "tavern", "o") is movement.
+            words = command.split()
+            if len(words) == 1 and self.location_manager.resolve_exit(words[0]):
+                self._handle_movement(words[0])
+                return True
             print_text("Diamond considered that, then decided it wasn't productive. (Type 'help' for commands.)")
             return True
         
@@ -101,6 +106,7 @@ class GameManager:
             "combine": self._handle_combine_items,
             "drop": self._handle_drop_item,
             "score": self._handle_score,
+            "exits": self._handle_exits,
         }
         
         if command_type in handlers:
@@ -113,11 +119,19 @@ class GameManager:
         self.location_manager.move_to_location(direction, self.game_state)
 
     def _handle_take_item(self, item: str) -> None:
-        """Handle taking items."""
+        """Handle taking items, including 'take all'."""
         if not item:
             print_text("Take what?")
             return
         available_items = self.location_manager.get_available_items()
+        if item in ("all", "everything"):
+            if not available_items:
+                print_text("There's nothing here worth taking.")
+                return
+            for thing in list(available_items):
+                if self.item_manager.take_item(thing, available_items, self.game_state):
+                    self.location_manager.remove_item(thing)
+            return
         if self.item_manager.take_item(item, available_items, self.game_state):
             self.location_manager.remove_item(item)
 
@@ -218,6 +232,14 @@ class GameManager:
         score = self.game_state.get("score", 0)
         print_text(f"\nCase progress: {score} points.")
 
+    def _handle_exits(self, _: Any) -> None:
+        """List the ways out of the current location."""
+        exits = self.location_manager.get_valid_exits()
+        if exits:
+            print_text("\nWays out: " + ", ".join(exits))
+        else:
+            print_text("\nNo obvious way out. That's rarely a good sign.")
+
     def _check_darkness(self) -> bool:
         """
         Check whether the player is in a dark location without light.
@@ -254,7 +276,8 @@ class GameManager:
         if saves:
             choice = input("\nRestore last save? (y/n) ").strip().lower()
             if choice.startswith("y"):
-                save_name = saves[-1]["name"]
+                # list_saves() is sorted newest-first
+                save_name = saves[0]["name"]
                 if self.save_load_manager.load_game(self, save_name):
                     print_text("\nRestored. The grue slinks back into the dark.")
                     return False
@@ -344,13 +367,16 @@ class GameManager:
             "You are a detective. You know how to get around.\n\n"
             "MOVEMENT\n"
             "  north / south / east / west / up / down  (or: go north, n, etc.)\n"
+            "  Named exits work too — type the exit as you see it: 'outside',\n"
+            "  'upstairs', 'tavern', 'trolley'. Or 'o' for outside. \n"
+            "  exits — list the ways out of wherever you're standing\n"
             "  Compass directions work. So does common sense.\n\n"
             "INVESTIGATION\n"
             "  look                  — take in your surroundings\n"
             "  look at <item>        — examine something without picking it up\n"
             "  examine <item>        — look closely at something you're carrying\n"
             "  read <item>           — same as examine\n"
-            "  take <item>           — pocket an item\n"
+            "  take <item>           — pocket an item ('take all' grabs everything)\n"
             "  drop <item>           — set something down\n"
             "  use <item>            — put an item to work; may reveal a puzzle\n"
             "  combine <x> with <y>  — two clues are sometimes one clue\n"

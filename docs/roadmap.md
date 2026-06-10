@@ -98,9 +98,17 @@ and it works offline.
 
 Fold these in alongside the feature work.
 
-- [ ] **Anachronism:** `config_locations.py` describes the Smith Tower elevator
-      operator as a "Korean War vet" — the game is October 1947; the Korean War
-      began 1950. Make him a WWII / Pacific vet.
+- [x] **Anachronism:** Smith Tower elevator operator is now a Pacific war vet
+      (was "Korean War vet" — the game is October 1947).
+- [x] **Grue restore loaded the oldest save.** `_handle_grue_death` picked
+      `saves[-1]` from a newest-first list; now `saves[0]`.
+- [x] **Puzzle progress wasn't saved.** `PuzzleManager` now has
+      `get_state`/`restore_state` and rides in the save payload
+      (`puzzle_state`); old saves without the field load fine.
+- [x] **Movement vocabulary split.** Bare named exits ("outside", "upstairs",
+      "tavern") now move the player; synonym layer ("o"/"out" → outside,
+      "up" ↔ "upstairs", "board" → trolley); new `exits` command lists ways
+      out; `take all` / `take everything` implemented.
 - [ ] **Dead location refs:** `badge` and `cipher_wheel` list `"warehouse"` in
       `use_locations` (`item_manager.py`), but no such location exists
       (`warehouse_district` / `warehouse_three` / `warehouse_office`). `use`
@@ -141,3 +149,6 @@ Bigger swings to deepen the noir RPG once the multimedia layer lands:
 
 - **Phase 1 started.** Media layer + grue-death vertical slice landed; 253
   tests still passing. Next up: victory + tunnels art.
+- **Pre-beta fixes.** Movement overhaul (named exits, synonyms, `exits`,
+  `take all`), grue restores newest save, puzzle progress persists through
+  save/load. 270 tests passing.

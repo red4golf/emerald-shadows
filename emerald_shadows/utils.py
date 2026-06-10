@@ -178,7 +178,8 @@ class SaveLoadManager:
                 'version': "1.0.0",
                 'game_state': game_instance.game_state,
                 'location_state': location_state,
-                'inventory_state': game_instance.item_manager.get_inventory_state()
+                'inventory_state': game_instance.item_manager.get_inventory_state(),
+                'puzzle_state': game_instance.puzzle_manager.get_state()
             }
             
             file_path = self.save_dir / f"{save_name}.json"
@@ -215,7 +216,10 @@ class SaveLoadManager:
             
             # Restore inventory
             game_instance.item_manager.restore_inventory_state(save_data['inventory_state'])
-            
+
+            # Restore puzzle progress (absent in saves predating this field)
+            game_instance.puzzle_manager.restore_state(save_data.get('puzzle_state'))
+
             self.logger.info(f"Game loaded successfully from {file_path}")
             return True
 

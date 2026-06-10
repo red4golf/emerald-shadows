@@ -49,6 +49,8 @@ class NaturalCommandHandler:
             "save": "save",
             "load": "load",
             "score": "score",
+            "exits": "exits",
+            "ways": "exits",
         }
 
         self.verb_aliases: Dict[str, str] = {
