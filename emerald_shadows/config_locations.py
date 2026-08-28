@@ -10,7 +10,7 @@ LOCATIONS = {
             "the last of the evening light."
         ),
         "exits": {"outside": "street", "upstairs": "evidence_room"},
-        "items": ["badge", "case_file"],
+        "items": ["badge", "case_file", "notebook"],
         "first_visit": True,
         "historical_note": (
             "Seattle's police headquarters on Third Avenue has seen its share of scandal. "
@@ -156,7 +156,7 @@ LOCATIONS = {
             "equipment recently. The ashtray is full."
         ),
         "exits": {"door": "warehouse_three"},
-        "items": ["notebook", "note_5"],
+        "items": ["note_5"],
         "first_visit": True,
         "historical_note": (
             "The office was thrown up in 1946 when the new tenants took the lease. "
@@ -180,7 +180,8 @@ LOCATIONS = {
             "east": "warehouse_district",
             "underground": "underground_tunnels",
             "trolley": "trolley",
-            "shack": "harbormaster_shack"
+            "shack": "harbormaster_shack",
+            "south": "pier_seven"
         },
         "items": [],
         "first_visit": True,
@@ -190,6 +191,32 @@ LOCATIONS = {
             "Union has had a stranglehold on waterfront labor since the 1934 strike. "
             "The men who work these docks know every crate that moves — and know "
             "better than to talk about it."
+        )
+    },
+    "pier_seven": {
+        "description": (
+            "Pier 7 at twenty past eleven, and the rain has stopped, which is worse. "
+            "Without it the waterfront is very quiet and you can hear everything: the "
+            "hull working against the pilings, a winch somewhere aft, men talking low "
+            "in the shed at the end of the pier where a light is burning that has no "
+            "business burning at this hour.\n\n"
+            "The ship that has been sitting out in the roads three nights is alongside "
+            "now. Crates are coming off her, and the stencils have been painted over, "
+            "badly.\n\n"
+            "A man is standing at the shed door with a clipboard, waiting for somebody "
+            "who knows the word.\n\n"
+            "This is the end of it. When you're ready: 'arrest'."
+        ),
+        "exits": {"north": "docks"},
+        "items": [],
+        "first_visit": True,
+        "requires": "act_three",
+        "historical_note": (
+            "The Port of Seattle's central waterfront piers were built on timber "
+            "trestles over tideflats, numbered from the south. Pier 7 handled coastal "
+            "freight and, during the war, materiel bound for Alaska and the Aleutians. "
+            "A great deal came back through here in 1946 that was never supposed to "
+            "come back at all."
         )
     },
     "underground_tunnels": {
@@ -255,7 +282,9 @@ LOCATIONS = {
             "east": "street",
             "trolley": "trolley"
         },
-        "items": ["informant_note"],
+        # The informant's note isn't lying around — it's earned off the motorman
+        # on the waterfront line, who is the 'R.' that signed it.
+        "items": [],
         "first_visit": True,
         "historical_note": (
             "Pike Place Market opened August 17, 1907, after city council member Thomas "
