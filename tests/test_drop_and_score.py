@@ -73,6 +73,7 @@ def test_handle_drop_calls_drop_and_add(monkeypatch, gm):
 def test_handle_drop_no_item_prints_prompt(monkeypatch, gm):
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda t, **_: messages.append(t))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda t, **_: messages.append(t))
     gm._handle_drop_item("")
     assert any("drop what" in m.lower() for m in messages)
 
@@ -161,10 +162,14 @@ def test_combining_items_only_awards_once(item_manager, game_state):
 # ---------------------------------------------------------------------------
 
 def test_solving_puzzle_awards_score():
+    from copy import deepcopy
+
     from emerald_shadows.puzzles.puzzle_manager import PuzzleManager
-    game_state = INITIAL_GAME_STATE.copy()
-    pm = PuzzleManager(solution_provider=lambda loc: "415.6")
-    pm.handle_puzzle("warehouse_office", {"radio_manual"}, game_state)
+    game_state = deepcopy(INITIAL_GAME_STATE)
+    pm = PuzzleManager()
+    # The radio is swept, not answered: tuning onto the frequency is the solve.
+    pm.interact("warehouse_office", "tune", "415.6",
+                {"radio_manual", "informant_note"}, game_state)
     assert game_state["score"] == 25
 
 
@@ -201,6 +206,7 @@ def test_handle_score_prints_score(monkeypatch, gm):
     gm.game_state["score"] = 42
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda t, **_: messages.append(t))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda t, **_: messages.append(t))
     gm._handle_score(None)
     assert any("42" in m for m in messages)
 

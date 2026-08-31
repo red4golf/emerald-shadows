@@ -65,6 +65,7 @@ def test_look_command_prints_description(monkeypatch, game_manager):
     monkeypatch.setattr(game_manager.location_manager, "get_location_description", lambda: "Dark alley")
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda text, **_: messages.append(text))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda text, **_: messages.append(text))
 
     assert game_manager.process_command("look") is True
     assert any("Dark alley" in message for message in messages)
@@ -85,6 +86,7 @@ def test_examine_command_routes_to_item_manager(monkeypatch, game_manager):
 def test_use_command_without_item_prompts(monkeypatch, game_manager):
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda text, **_: messages.append(text))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda text, **_: messages.append(text))
 
     assert game_manager.process_command("use") is True
     assert any("Use what?" in msg for msg in messages)
@@ -106,6 +108,7 @@ def test_use_command_calls_item_manager(monkeypatch, game_manager):
 def test_combine_command_requires_two_items(monkeypatch, game_manager):
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda text, **_: messages.append(text))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda text, **_: messages.append(text))
 
     assert game_manager.process_command("combine") is True
     assert any("Combine which items" in msg for msg in messages)
@@ -144,6 +147,7 @@ def test_load_command_reports_missing_saves(monkeypatch, game_manager):
     monkeypatch.setattr(game_manager.save_load_manager, "list_saves", lambda: [])
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda text, **_: messages.append(text))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda text, **_: messages.append(text))
 
     assert game_manager.process_command("load") is True
     assert any("No save files found" in msg for msg in messages)
@@ -186,6 +190,7 @@ def test_quit_saves_when_requested(monkeypatch, game_manager):
 def test_unknown_command_prints_feedback(monkeypatch, game_manager):
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda text, **_: messages.append(text))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda text, **_: messages.append(text))
     assert game_manager.process_command("kick the door") is True
     assert any("productive" in m.lower() or "help" in m.lower() for m in messages)
 
@@ -215,11 +220,19 @@ def test_check_auto_save_triggers(monkeypatch, game_manager):
     assert saved["count"] == 1
 
 
-def test_check_game_progress_requires_all_items_and_states(monkeypatch, game_manager):
+def test_check_game_progress_needs_the_arrest(monkeypatch, game_manager):
+    """The case closes on the arrest at Pier 7, not on a full checklist.
+
+    Holding every item and setting every investigation flag gets you to Act 3
+    and no further — the player still has to go down to the water.
+    """
     monkeypatch.setattr(game_manager.item_manager, "get_inventory", lambda: list(REQUIRED_ITEMS))
     for state in REQUIRED_STATES:
         game_manager.game_state[state] = True
 
+    assert game_manager.check_game_progress() is False
+
+    game_manager.game_state["case_closed"] = True
     assert game_manager.check_game_progress() is True
 
 
@@ -232,6 +245,7 @@ def test_look_in_dark_location_shows_darkness_warning(monkeypatch, game_manager)
     game_manager.game_state["flashlight_lit"] = False
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda text, **_: messages.append(text))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda text, **_: messages.append(text))
 
     assert game_manager.process_command("look") is True
     combined = " ".join(messages).lower()
@@ -246,6 +260,7 @@ def test_look_in_dark_location_suppresses_room_description(monkeypatch, game_man
     game_manager.game_state["flashlight_lit"] = False
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda text, **_: messages.append(text))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda text, **_: messages.append(text))
 
     game_manager.process_command("look")
     assert not any("SECRET ROOM TEXT" in m for m in messages)
@@ -257,6 +272,7 @@ def test_look_in_dark_location_with_flashlight_shows_description(monkeypatch, ga
     game_manager.game_state["flashlight_lit"] = True
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda text, **_: messages.append(text))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda text, **_: messages.append(text))
 
     game_manager.process_command("look")
     assert any("Tunnel walls drip." in m for m in messages)
@@ -267,6 +283,7 @@ def test_look_in_lit_location_shows_description(monkeypatch, game_manager):
     monkeypatch.setattr(game_manager.location_manager, "get_location_description", lambda: "Dark alley")
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda text, **_: messages.append(text))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda text, **_: messages.append(text))
 
     game_manager.process_command("look")
     assert any("Dark alley" in m for m in messages)
@@ -312,6 +329,7 @@ def test_last_location_initialises_to_none(game_manager):
 def test_victory_mentions_roy_hendricks(monkeypatch, game_manager):
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda text, **_: messages.append(text))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda text, **_: messages.append(text))
     game_manager.show_victory()
     combined = " ".join(messages)
     assert "Roy Hendricks" in combined
@@ -320,6 +338,7 @@ def test_victory_mentions_roy_hendricks(monkeypatch, game_manager):
 def test_victory_mentions_hendricks_role(monkeypatch, game_manager):
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda text, **_: messages.append(text))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda text, **_: messages.append(text))
     game_manager.show_victory()
     combined = " ".join(messages)
     assert "motorman" in combined.lower()
@@ -339,6 +358,7 @@ def test_handle_load_displays_slots(monkeypatch, game_manager):
 
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda text, **_: messages.append(text))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda text, **_: messages.append(text))
     monkeypatch.setattr(builtins, "input", fake_input)
 
     assert game_manager.process_command("load") is True

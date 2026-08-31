@@ -140,10 +140,42 @@ def clear_screen() -> None:
     """Clear the terminal screen."""
     DisplayManager.clear_screen()
 
-def print_text(text: str, delay: Optional[float] = None, 
+def print_text(text: str, delay: Optional[float] = None,
               indent: int = 0, wrap: bool = True) -> None:
     """Print text using DisplayManager."""
     DisplayManager.print_text(text, delay, indent, wrap)
+
+
+def print_block(text: str) -> None:
+    """Print text whose line structure carries meaning.
+
+    The normal ``print_text`` reflows a paragraph to the terminal, which is right
+    for prose and wrong for a casebook, a Morse chart, or a column of cipher
+    settings — it runs them together into one grey lump. This preserves every
+    line break and only wraps individual lines that genuinely overrun, keeping
+    them hanging-indented under their own first line.
+    """
+    width, _ = DisplayManager.get_terminal_size()
+    out: List[str] = []
+    for line in text.split("\n"):
+        if not line.strip():
+            out.append("")
+            continue
+        if len(line) <= width:
+            out.append(line)
+            continue
+        # Continuations line up under the line's own indent: prose wraps flush,
+        # and an indented row (a casebook entry, a chart line) stays in column.
+        indent = len(line) - len(line.lstrip())
+        out.append(textwrap.fill(
+            line,
+            width=width,
+            initial_indent="",
+            subsequent_indent=" " * indent,
+            break_long_words=False,
+            break_on_hyphens=False,
+        ))
+    print("\n".join(out))
 
 @dataclass
 class SaveGameData:
@@ -179,7 +211,8 @@ class SaveLoadManager:
                 'game_state': game_instance.game_state,
                 'location_state': location_state,
                 'inventory_state': game_instance.item_manager.get_inventory_state(),
-                'puzzle_state': game_instance.puzzle_manager.get_state()
+                'puzzle_state': game_instance.puzzle_manager.get_state(),
+                'dialogue_state': game_instance.dialogue_manager.get_state(),
             }
             
             file_path = self.save_dir / f"{save_name}.json"
@@ -219,6 +252,9 @@ class SaveLoadManager:
 
             # Restore puzzle progress (absent in saves predating this field)
             game_instance.puzzle_manager.restore_state(save_data.get('puzzle_state'))
+
+            # Restore conversation progress (absent in saves predating dialogue)
+            game_instance.dialogue_manager.restore_state(save_data.get('dialogue_state'))
 
             self.logger.info(f"Game loaded successfully from {file_path}")
             return True

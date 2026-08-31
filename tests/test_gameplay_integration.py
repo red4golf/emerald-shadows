@@ -19,11 +19,13 @@ def test_taking_badge_updates_inventory_and_location():
     assert "badge" not in location_manager.get_available_items()
 
 
-def test_combining_items_decodes_notes():
+def test_combining_items_identifies_the_tool():
     item_manager = ItemManager()
     game_state = INITIAL_GAME_STATE.copy()
 
     item_manager.inventory.extend(["notebook", "cipher_wheel"])
 
     assert item_manager.combine_items("notebook", "cipher_wheel", game_state) is True
-    assert game_state.get("decoded_notes") is True
+    # The combination is a lead, not the solve — the cipher puzzle still stands.
+    assert game_state.get("examined_cipher") is True
+    assert game_state.get("decoded_notes") is False

@@ -4,7 +4,7 @@ import json
 import logging
 from copy import deepcopy
 from dataclasses import dataclass
-from .config import STARTING_LOCATION
+from .config import DEFAULT_GATE_MESSAGE, GATE_MESSAGES, STARTING_LOCATION
 from .config_locations import LOCATIONS
 from .trolley_system import TrolleySystem, TrolleyState
 from .utils import print_text
@@ -190,7 +190,9 @@ class LocationManager:
             location = self.locations[location_name]
             if location.requires:
                 if not game_state.get(location.requires, False):
-                    print_text(f"You can't access this area yet. You need to {location.requires.replace('_', ' ')} first.")
+                    print_text("\n" + GATE_MESSAGES.get(
+                        location.requires, DEFAULT_GATE_MESSAGE
+                    ))
                     return False
             return True
             
@@ -208,9 +210,14 @@ class LocationManager:
             # Snap trolley to the stop nearest the boarding location
             self.trolley.set_boarding_position(boarding_from)
 
+            # Board every time — this is what marks the player as aboard, and
+            # without it a second ride can never be got off again. The long
+            # introduction is only worth printing once.
+            welcome = self.trolley.board_trolley()
             if trolley_location.first_visit:
                 trolley_location.first_visit = False
-                print_text(self.trolley.board_trolley())
+                if welcome:
+                    print_text(welcome)
 
             current_stop = self.trolley.routes[self.trolley.position]
             trolley_location.exits = {
@@ -239,16 +246,47 @@ class LocationManager:
                 print_text(self.trolley.get_history())
             elif command == "look":
                 print_text(self.trolley.get_status())
-            elif command in ["next", "off"]:
+            elif command == "next":
                 message, exits = self.trolley.handle_movement()
                 print_text(message)
                 self.locations["trolley"].exits = exits
+            elif command == "off":
+                self._disembark()
             else:
                 print_text("Invalid trolley command. Use: next, off, status, history, or look")
             
         except Exception as e:
             logging.error(f"Error handling trolley command: {e}")
             print_text("There was a problem with the trolley system.")
+
+    def _disembark(self) -> bool:
+        """Step off the trolley at the current stop.
+
+        Previously 'off' was routed into the tram's movement handler, which only
+        toggled whether it was rolling — so a player who boarded could never get
+        back onto the street. Pioneer Square is reachable only by tram, so that
+        made the case impossible to finish.
+        """
+        if self.trolley.in_motion:
+            print_text(
+                "\nThe tram is still moving, and Diamond has already had one "
+                "conversation with a Seattle street this year. Wait for the stop."
+            )
+            return False
+
+        destination = self.trolley.exit_trolley()
+        if not destination:
+            print_text("\nYou aren't aboard anything.")
+            return False
+
+        self.current_location = destination
+        arrived = self.locations[destination]
+        if arrived.first_visit:
+            arrived.first_visit = False
+            if arrived.historical_note:
+                print_text(f"\nHistorical Note: {arrived.historical_note}")
+        logging.info("Disembarked trolley at %s", destination)
+        return True
 
     def show_historical_note(self, location: str) -> None:
         """Display historical information about the specified location."""

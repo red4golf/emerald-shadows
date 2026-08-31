@@ -95,10 +95,16 @@ def test_use_binoculars_sets_surveilled_docks(item_manager, game_state):
 
 # --- combine_items ---
 
-def test_combine_sets_decoded_notes(item_manager, game_state):
+def test_combine_points_at_the_work_table(item_manager, game_state):
+    """Holding the wheel against the page is not decoding it.
+
+    The combination establishes that the wheel is the right tool; the memo is
+    only actually broken by working the puzzle in the evidence room.
+    """
     item_manager.inventory.extend(["notebook", "cipher_wheel"])
     assert item_manager.combine_items("notebook", "cipher_wheel", game_state) is True
-    assert game_state["decoded_notes"] is True
+    assert game_state["examined_cipher"] is True
+    assert game_state["decoded_notes"] is False
 
 
 def test_combine_already_discovered(item_manager, game_state, capsys):

@@ -150,6 +150,7 @@ def test_take_membership_register_prints_flavour(monkeypatch):
     m = ItemManager()
     messages = []
     monkeypatch.setattr(item_manager_module, "print_text", lambda t, **_: messages.append(t))
+    monkeypatch.setattr(item_manager_module, "print_block", lambda t, **_: messages.append(t))
     state = fresh_state()
 
     result = m.take_item("membership_register", ["membership_register"], state)
@@ -162,6 +163,7 @@ def test_take_meeting_minutes_prints_flavour(monkeypatch):
     m = ItemManager()
     messages = []
     monkeypatch.setattr(item_manager_module, "print_text", lambda t, **_: messages.append(t))
+    monkeypatch.setattr(item_manager_module, "print_block", lambda t, **_: messages.append(t))
     state = fresh_state()
 
     result = m.take_item("meeting_minutes", ["meeting_minutes"], state)
@@ -174,6 +176,7 @@ def test_take_manifest_prints_flavour(monkeypatch):
     m = ItemManager()
     messages = []
     monkeypatch.setattr(item_manager_module, "print_text", lambda t, **_: messages.append(t))
+    monkeypatch.setattr(item_manager_module, "print_block", lambda t, **_: messages.append(t))
     state = fresh_state()
 
     result = m.take_item("manifest", ["manifest"], state)
@@ -224,6 +227,7 @@ def test_badge_use_at_eagles_hall_prints_porter_message(monkeypatch):
     m = manager_with("badge")
     messages = []
     monkeypatch.setattr(item_manager_module, "print_text", lambda t, **_: messages.append(t))
+    monkeypatch.setattr(item_manager_module, "print_block", lambda t, **_: messages.append(t))
     state = fresh_state()
 
     m.use_item("badge", "eagles_hall", state)
@@ -281,6 +285,7 @@ def test_badge_use_at_anchor_tavern_prints_ches_dialogue(monkeypatch):
     m = manager_with("badge")
     messages = []
     monkeypatch.setattr(item_manager_module, "print_text", lambda t, **_: messages.append(t))
+    monkeypatch.setattr(item_manager_module, "print_block", lambda t, **_: messages.append(t))
     state = fresh_state()
 
     m.use_item("badge", "anchor_tavern", state)
@@ -307,6 +312,7 @@ def test_examine_membership_register_shows_voss(monkeypatch):
     m = manager_with("membership_register")
     messages = []
     monkeypatch.setattr(item_manager_module, "print_text", lambda t, **_: messages.append(t))
+    monkeypatch.setattr(item_manager_module, "print_block", lambda t, **_: messages.append(t))
 
     m.examine_item("membership_register", [], fresh_state())
 
@@ -317,6 +323,7 @@ def test_examine_meeting_minutes_shows_northwest_maritime(monkeypatch):
     m = manager_with("meeting_minutes")
     messages = []
     monkeypatch.setattr(item_manager_module, "print_text", lambda t, **_: messages.append(t))
+    monkeypatch.setattr(item_manager_module, "print_block", lambda t, **_: messages.append(t))
 
     m.examine_item("meeting_minutes", [], fresh_state())
 
@@ -328,6 +335,7 @@ def test_examine_manifest_shows_weight_discrepancy(monkeypatch):
     m = manager_with("manifest")
     messages = []
     monkeypatch.setattr(item_manager_module, "print_text", lambda t, **_: messages.append(t))
+    monkeypatch.setattr(item_manager_module, "print_block", lambda t, **_: messages.append(t))
 
     m.examine_item("manifest", [], fresh_state())
 
@@ -371,6 +379,7 @@ def test_victory_mentions_eagles_chapter(monkeypatch):
     gm = GameManager()
     messages = []
     monkeypatch.setattr(gm_module, "print_text", lambda t, **_: messages.append(t))
+    monkeypatch.setattr(gm_module, "print_block", lambda t, **_: messages.append(t))
     gm.show_victory()
     combined = " ".join(messages)
     assert "Eagles" in combined
@@ -383,6 +392,7 @@ def test_victory_mentions_voss_member_number(monkeypatch):
     gm = GameManager()
     messages = []
     monkeypatch.setattr(gm_module, "print_text", lambda t, **_: messages.append(t))
+    monkeypatch.setattr(gm_module, "print_block", lambda t, **_: messages.append(t))
     gm.show_victory()
     combined = " ".join(messages)
     assert "1144" in combined
