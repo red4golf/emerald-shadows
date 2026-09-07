@@ -23,6 +23,11 @@ from .media import present
 
 TROLLEY_COMMANDS = {"next", "off", "status", "history"}
 
+DARK_WARNING = (
+    "\nIt is pitch dark. Something moves in the dark nearby — patient, "
+    "unhurried. It has done this before. Use your flashlight, Diamond."
+)
+
 # Verbs that operate a puzzle in the room rather than acting on the world.
 PUZZLE_VERBS = {"turn", "tune", "tap", "listen"}
 
@@ -187,10 +192,7 @@ class GameManager:
     def _handle_look(self, _: Any) -> None:
         """Describe the current location, respecting darkness."""
         if self.location_manager.is_dark() and not self.game_state.get("flashlight_lit", False):
-            print_text(
-                "\nIt is pitch dark. Something moves in the dark nearby — patient, "
-                "unhurried. It has done this before. Use your flashlight, Diamond."
-            )
+            print_text(DARK_WARNING)
             return
         description = self.location_manager.get_location_description()
         print_text("\n" + description)
@@ -414,10 +416,7 @@ class GameManager:
 
         self.game_state["dark_turns"] = self.game_state.get("dark_turns", 0) + 1
         if self.game_state["dark_turns"] == 1:
-            print_text(
-                "\nIt is pitch dark. Something moves in the dark nearby — patient, "
-                "unhurried. It has done this before. Use your flashlight, Diamond."
-            )
+            print_text(DARK_WARNING)
             return False
         return self._handle_grue_death()
 
@@ -601,6 +600,7 @@ class GameManager:
 
     def show_victory(self) -> None:
         """Display victory message."""
+        present("victory")
         victory_text = (
             "EXPENSE ACCOUNT MEMO\n"
             "The Matter of the Northwest Maritime Imports\n"

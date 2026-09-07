@@ -235,17 +235,16 @@ class LocationManager:
         """Handle trolley-specific commands."""
         try:
             if self.current_location != "trolley":
+                print_text("You're not aboard the tram. Find a trolley stop first.")
                 return
 
             command = command.lower().strip()
             self.last_command = command
-            
+
             if command == "status":
                 print_text(self.trolley.get_status())
             elif command == "history":
                 print_text(self.trolley.get_history())
-            elif command == "look":
-                print_text(self.trolley.get_status())
             elif command == "next":
                 message, exits = self.trolley.handle_movement()
                 print_text(message)
@@ -253,7 +252,7 @@ class LocationManager:
             elif command == "off":
                 self._disembark()
             else:
-                print_text("Invalid trolley command. Use: next, off, status, history, or look")
+                print_text("Invalid trolley command. Use: next, off, status, or history")
             
         except Exception as e:
             logging.error(f"Error handling trolley command: {e}")
