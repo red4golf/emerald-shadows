@@ -16,6 +16,22 @@ BRIGHT_GREEN = "\033[92m"
 # Two eyes and a maw surfacing out of the dark. You never really see a grue —
 # you see what little the dark lets you. Kept under 60 columns so it survives a
 # narrow terminal (DisplayManager clamps width to a 60-column minimum).
+# The case-file stamp shown before the closing expense-account memo.
+# Kept under 60 columns (DisplayManager's minimum terminal width).
+VICTORY_ART = r"""
+ ______________________________________________
+|                                              |
+|  SEATTLE POLICE DEPT. — DETECTIVE DIVISION   |
+|  CASE No. 447-E — NORTHWEST MARITIME IMPORTS |
+|                                              |
+|       ╔═══════════════════════════╗          |
+|       ║   C A S E   C L O S E D   ║          |
+|       ╚═══════════════════════════╝          |
+|                                              |
+|  Det. J. Diamond ............. October 1947  |
+|______________________________________________|
+"""
+
 GRUE_ART = r"""
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░

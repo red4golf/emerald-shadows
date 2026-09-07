@@ -59,6 +59,12 @@ MOMENTS: Dict[str, Dict[str, Any]] = {
         "animate": True,
         "audio": None,  # future: sounds/grue_death.wav
     },
+    "victory": {
+        "art": game_art.VICTORY_ART,
+        "color": game_art.AMBER,
+        "animate": True,
+        "audio": None,  # future: sounds/victory_radio.wav
+    },
 }
 
 

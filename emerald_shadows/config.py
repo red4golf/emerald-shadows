@@ -161,9 +161,6 @@ ENABLE_TEXT_EFFECTS: Final[bool] = True
 MAX_MESSAGE_LENGTH: Final[int] = 1000
 
 # Puzzle Settings
-MAX_PUZZLE_ATTEMPTS: Final[int] = 3
-PUZZLE_TIMEOUT: Final[int] = 300  # seconds
-
 PUZZLE_SOLUTIONS: Final[Dict[str, Dict[str, str]]] = {
     "radio_puzzle": {
         "frequency": "415.6",

@@ -100,7 +100,7 @@ ITEM_DESCRIPTIONS = {
                 "You pocket the badge and leave him to his glass."
             )
         },
-        "use_locations": ["smith_tower", "police_station", "warehouse", "eagles_hall", "anchor_tavern"],
+        "use_locations": ["smith_tower", "police_station", "eagles_hall", "anchor_tavern"],
         "consumable": False
     },
     "binoculars": {
@@ -139,7 +139,7 @@ ITEM_DESCRIPTIONS = {
         "use_effects": {
             "all": "You turn the cipher wheel in your hands. It's waiting for a key word."
         },
-        "use_locations": ["evidence_room", "office", "warehouse"],
+        "use_locations": ["evidence_room", "warehouse_office"],
         "consumable": False
     },
     "notebook": {

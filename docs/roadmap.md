@@ -105,7 +105,7 @@ Cheap, high-impact, no new dependencies, reversible.
 - [x] **Media layer seam** (`media.py`) with capability detection + safety contract.
 - [x] **Grue death art**, wired through `present("grue_death")` with a slow,
       line-by-line reveal. *(Vertical slice — proves the whole pattern.)*
-- [ ] **Victory art** for the expense-account memo ending.
+- [x] **Victory art** — CASE CLOSED file stamp before the expense-account memo.
 - [ ] **Underground tunnels** entrance art (sets up the grue threat).
 - [ ] **Per-district header sigils** (small, ≤ 60 cols) shown on first visit.
 - [ ] Asset guidelines: keep art ≤ 60 columns (DisplayManager's min width);
@@ -155,25 +155,23 @@ Fold these in alongside the feature work.
       "tavern") now move the player; synonym layer ("o"/"out" → outside,
       "up" ↔ "upstairs", "board" → trolley); new `exits` command lists ways
       out; `take all` / `take everything` implemented.
-- [ ] **Dead location refs:** `badge` and `cipher_wheel` list `"warehouse"` in
-      `use_locations` (`item_manager.py`), but no such location exists
-      (`warehouse_district` / `warehouse_three` / `warehouse_office`). `use`
-      silently does nothing there.
+- [x] **Dead location refs:** `badge`/`cipher_wheel` no longer reference
+      nonexistent `"warehouse"`/`"office"` locations; config-integrity tests
+      now validate every `use_locations`/`use_effects` key, every exit target,
+      and every NPC placement against the location table.
 - [x] **`INVENTORY_LIMIT` removed** — defined, never read, and a carry limit is
       pure friction in a mystery.
-- [ ] **Still unenforced:** `MAX_PUZZLE_ATTEMPTS` and `PUZZLE_TIMEOUT` are
-      defined but never read. The reworked puzzles have no attempt limit by
-      design (sweeping a band *is* repeated attempts), so these should probably
-      just go.
+- [x] **`MAX_PUZZLE_ATTEMPTS` / `PUZZLE_TIMEOUT` removed** — never read, and
+      the reworked puzzles have no attempt limit by design (sweeping a band
+      *is* repeated attempts).
 - [x] **Auto-generated gate messages** produced "You need to found warehouse
       first". Authored per-flag messages now live in `config.GATE_MESSAGES`.
 - [x] **The solve prompt leaked internals** ("Enter solution for the puzzle at
       evidence_room") in a game whose product is voice.
-- [ ] **Trolley quirks:** unreachable `command == "look"` branch in
-      `location_manager.handle_trolley_command`; `status`/`history` typed off the
-      trolley silently no-op.
-- [ ] **Cosmetic:** darkness-warning text duplicated in `_handle_look` and
-      `_check_darkness`; duplicate git commit in history.
+- [x] **Trolley quirks:** removed unreachable `look` branch; trolley commands
+      typed off the tram now say so instead of silently doing nothing.
+- [x] **Cosmetic:** darkness warning is now a single `DARK_WARNING` constant.
+      (Duplicate commit in history is permanent — harmless.)
 
 ---
 
@@ -205,3 +203,11 @@ Bigger swings to deepen the noir RPG once the multimedia layer lands:
 - **Pre-beta fixes.** Movement overhaul (named exits, synonyms, `exits`,
   `take all`), grue restores newest save, puzzle progress persists through
   save/load. 270 tests passing.
+- **Detective-game overhaul merged (PR #10).** Real puzzles (cipher wheel you
+  turn, radio you tune, Morse you tap, plate fragments), witness dialogue
+  (`talk`/`ask`/`topics`), casebook (`case`), three acts, arrest endgame,
+  end-to-end walkthrough test. 400 tests passing.
+- **Backlog cleared + victory art (PR #11 rework).** Remaining review defects
+  fixed on top of the overhaul; config-integrity tests (items, exits, NPCs);
+  CASE CLOSED stamp before the victory memo. 411 tests passing. Phase 1
+  remaining: tunnels entrance art, district sigils.
