@@ -48,8 +48,27 @@ INITIAL_GAME_STATE: Final[Dict[str, Any]] = {
     "flashlight_lit": False,
     "dark_turns": 0,
 
-    # Darkness / grue tracking (continued)
+    # Witness testimony (set through conversation)
     "ches_tip": False,
+    "heard_harbormaster": False,
+    "knows_pier": False,
+    "voss_observed": False,
+    "porter_relented": False,
+    "roy_talking": False,
+    "roy_gave_note": False,
+    "knows_mathers": False,
+    "mathers_confessed": False,
+    "mathers_named_warehouse": False,
+
+    # Puzzle working state
+    "cipher_setting": None,
+    "tuned_frequency": None,
+    "frequencies_tried": [],
+    "heard_signal": False,
+    "plate_fragments": [],
+
+    # Act tracking — the highest act the player has been shown
+    "act_seen": 1,
 
     # Scoring
     "score": 0,
@@ -82,8 +101,10 @@ REQUIRED_STATES: Final[Set[str]] = frozenset({
 
 # Game Settings
 STARTING_LOCATION: Final[str] = "police_station"
-AUTO_SAVE_INTERVAL: Final[int] = 300  # 5 minutes in seconds
-INVENTORY_LIMIT: Final[int] = 10
+# Turn-based games checkpoint best at meaningful moments, so the autosave fires
+# on a change of location rather than a wall clock. Kept in seconds as a floor
+# so a player pacing one room can't thrash the disk.
+AUTO_SAVE_INTERVAL: Final[int] = 300
 
 # Terminal Display Settings
 @dataclass(frozen=True)
@@ -112,13 +133,22 @@ BASIC_COMMANDS: Final[Set[str]] = frozenset({
     # Inventory
     "inventory", "i",
 
+    # Investigation
+    "case", "topics", "listen",
+
     # Game Control
     "help", "quit", "save", "load", "score"
 })
 
 COMPLEX_COMMANDS: Final[Set[str]] = frozenset({
     # Action Commands
-    "go", "take", "examine", "use", "combine", "solve", "drop"
+    "go", "take", "examine", "use", "combine", "solve", "drop",
+
+    # Conversation
+    "ask", "talk",
+
+    # Operating a puzzle
+    "turn", "tune", "tap", "arrest",
 })
 
 # Validate command sets
@@ -150,6 +180,27 @@ PUZZLE_SOLUTIONS: Final[Dict[str, Dict[str, str]]] = {
         "fail_message": "You mis-tap the code and only echoes answer back.",
     },
 }
+
+# Authored refusals for gated locations, keyed by the flag that opens them.
+# Generating these from the flag name produced things like "You need to found
+# warehouse first", which is not a sentence and not the voice.
+GATE_MESSAGES: Final[Dict[str, str]] = {
+    "found_warehouse": (
+        "There's a way down here — a service hatch somebody has been using. But you "
+        "don't yet know what's down there or what it's for, and men who go into the "
+        "dark on a hunch come back as a paragraph in the P-I."
+    ),
+    "act_three": (
+        "Pier 7 is down there in the dark, working. You could walk onto it right now "
+        "and get exactly nothing, because you cannot yet say who runs it, what's on "
+        "it, or who signed for it.\n\n"
+        "Not yet. Finish the legwork first."
+    ),
+}
+
+DEFAULT_GATE_MESSAGE: Final[str] = (
+    "Not yet. You haven't earned the right to be standing in there."
+)
 
 GAME_MESSAGES: Final[Dict[str, str]] = {
     "NO_PUZZLE": "Nothing here calls for that kind of attention. Keep moving.",

@@ -52,6 +52,52 @@ Adding a new visual/audio beat = add art to `game_art.py`, add an entry to
 
 ---
 
+## Phase 0 — The detective game (done)
+
+The review's core finding was that the mechanics didn't ask the player to be a
+detective. They asked the player to be a courier for strings: every "puzzle" was
+a password retyped from a note, and there was no way to question anybody. This
+phase closed that gap.
+
+- [x] **Real puzzles.** The cipher wheel is a Caesar disc you sweep and read
+      (`turn wheel`), cracked by spotting a crib among 25 garbage strings. The
+      radio is a band you search with warmer/colder feedback, because the note's
+      last digit is rained off. The tunnels carry real Morse decoded against the
+      chart in the radio manual. The plate is assembled from three witnesses.
+      New `codes.py` holds the transformations as pure functions.
+- [x] **Conversation.** `ask <person> about <topic>`, `talk to`, `topics`. Five
+      witnesses; topics are global knowledge so a question learned in one place
+      can be put anywhere. Content lives in `config_dialogue.py`.
+- [x] **Three acts.** Legwork → Heat → Pier Seven, computed from state so saves
+      land in the right act. The case now closes on an `arrest` at Pier 7 with
+      the evidence in hand, not on a checklist filling up.
+- [x] **The casebook.** `case` replaces a bare score with established facts,
+      named people, and open threads.
+- [x] **Declarative effects.** Examining an item applies a data entry
+      (`EXAMINE_DISCOVERIES`) rather than an if/elif chain.
+
+### Softlocks found and fixed while building it
+
+Three of these made the shipped game impossible to finish:
+
+- [x] **You could never get off the trolley.** `off` was routed into the tram's
+      movement handler, which only toggled whether it was rolling;
+      `exit_trolley()` was written and unit-tested but never wired in. Pioneer
+      Square is trolley-only, and it holds the notice that identifies the
+      organisation — so the case could not be closed.
+- [x] **Re-boarding the trolley left you stuck.** `board_trolley()` was only
+      called on the location's first visit, so a second ride never set
+      `on_trolley` and could never be got off.
+- [x] **`back` was unreachable as an exit.** The parser rewrote it to "south"
+      before checking whether the room had an exit named `back` — which is what
+      the Eagles hall uses to reach the lounge, where a required item sits.
+      Named exits now outrank direction aliases.
+- [x] **The notebook was in the smugglers' office**, so Diamond had to find his
+      own case notebook in a warehouse. Moved to his desk.
+- [x] **EOF crashed the game** with a stack trace instead of exiting cleanly.
+- [x] **Structured text was reflowed into a lump.** `print_block` preserves line
+      structure for the casebook, charts, briefings and help.
+
 ## Phase 1 — ASCII art moments
 
 Cheap, high-impact, no new dependencies, reversible.
@@ -113,9 +159,16 @@ Fold these in alongside the feature work.
       `use_locations` (`item_manager.py`), but no such location exists
       (`warehouse_district` / `warehouse_three` / `warehouse_office`). `use`
       silently does nothing there.
-- [ ] **Unenforced config:** `INVENTORY_LIMIT`, `MAX_PUZZLE_ATTEMPTS`,
-      `PUZZLE_TIMEOUT` are defined but never read; puzzle "fail" text implies
-      limited attempts that don't exist. Wire up or remove.
+- [x] **`INVENTORY_LIMIT` removed** — defined, never read, and a carry limit is
+      pure friction in a mystery.
+- [ ] **Still unenforced:** `MAX_PUZZLE_ATTEMPTS` and `PUZZLE_TIMEOUT` are
+      defined but never read. The reworked puzzles have no attempt limit by
+      design (sweeping a band *is* repeated attempts), so these should probably
+      just go.
+- [x] **Auto-generated gate messages** produced "You need to found warehouse
+      first". Authored per-flag messages now live in `config.GATE_MESSAGES`.
+- [x] **The solve prompt leaked internals** ("Enter solution for the puzzle at
+      evidence_room") in a game whose product is voice.
 - [ ] **Trolley quirks:** unreachable `command == "look"` branch in
       `location_manager.handle_trolley_command`; `status`/`history` typed off the
       trolley silently no-op.

@@ -48,6 +48,62 @@ class LocationManager:
     def get_location_description(self) -> str
 ```
 
+#### Dialogue (`dialogue.py`, `config_dialogue.py`)
+Conversation engine plus its content, kept apart.
+
+- **Topics are global knowledge.** `DialogueManager.known_topics` is a set of
+  topic keys. Learning one from any source lets Diamond raise it with anyone;
+  each NPC answers only for the topics they have an entry for, and deflects in
+  character otherwise. This is what makes re-canvassing the city worthwhile.
+- **Content is data.** `config_dialogue.NPCS` maps a person to their topics, and
+  each topic entry may carry `unlocks`, `sets`, `score`, `fragment`, `gives`,
+  `requires`/`locked` and `once`. Adding a witness or a line of questioning is a
+  data change; the engine never needs touching.
+- **Persistence.** `get_state()`/`restore_state()` round-trip through the save
+  file. Saves predating dialogue restore to the starting topics.
+
+#### Acts (`acts.py`)
+Three-act progression. `ACT_REQUIREMENTS` maps an act number to the state flags
+that must all be true to stand in it, and `current_act()` **computes** the act
+rather than storing it — so a loaded save always lands in the right one.
+`check_advance()` tracks the last act shown (in `game_state["act_seen"]`, so it
+survives save/load) and never walks backwards. Act 3 sets `act_three`, which is
+the plain flag gating the Pier 7 location.
+
+The case is closed by `arrest` at Pier 7 with `FINALE_ITEMS` in hand — not by a
+checklist filling up. `GameManager.check_game_progress()` reads one flag,
+`case_closed`.
+
+#### Casebook (`casebook.py`)
+Renders the `case` command from three flag-gated tables (`FACTS`, `PEOPLE`,
+`OPEN`). Every line is gated on a game-state flag, so the casebook can never
+claim more than the player has earned. A test asserts every referenced flag
+actually exists, since a typo would otherwise silently never render.
+
+#### Codes (`codes.py`)
+Caesar and Morse codecs as pure functions, no game state and no I/O. `sweep()`
+returns all 26 wheel settings paired with the first word each yields — the
+crib-based break the cipher puzzle is built on. Kept separate so the
+transformations are cheap to test and the puzzle classes stay thin.
+
+#### Puzzle protocol (`puzzles/base_puzzle.py`)
+Puzzles are *operated*, not answered. A subclass declares the verbs it responds
+to via `verbs()` and handles them in `interact(verb, argument, game_state)`,
+returning `None` when the verb isn't its business or `(solved, message)` when it
+is. `briefing(game_state)` supplies the working materials shown by `solve`.
+`attempt()` remains for the one puzzle that still takes a typed answer (the
+licence plate) and as a typed fallback on the others.
+
+`PuzzleManager.handle_puzzle()` shows the briefing and only prompts for a typed
+answer when the puzzle exposes no verbs.
+
+#### Display (`utils.py`)
+`print_text` reflows a paragraph to the terminal, which is right for prose and
+wrong for anything whose line structure carries meaning. `print_block` preserves
+every line break and wraps only lines that genuinely overrun, aligning
+continuations to the line's own indent. Use it for the casebook, puzzle
+briefings, charts, help, and the act openings.
+
 #### 3. Config System (`config.py`)
 Game configuration and constants.
 - Game settings

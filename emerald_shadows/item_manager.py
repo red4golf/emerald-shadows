@@ -1,17 +1,25 @@
 from typing import Dict, List, Optional, Set, Tuple
 from datetime import datetime
 import logging
-from .utils import print_text
+from .codes import morse_chart
+from .utils import print_block, print_text
+
+# Rendered once at import: the chart the player actually decodes the tunnel
+# signal against. Lives in the radio manual, where a signals man would keep it.
+_MORSE_REFERENCE = morse_chart()
 
 ITEM_DESCRIPTIONS = {
     "informant_note": {
         "basic": "A folded note, left where you'd find it.",
         "detailed": (
-            "The handwriting is cramped and hurried, like someone who knew they weren't "
-            "safe standing still long enough to write slowly. It reads: 'Emergency "
-            "frequency 415.6 MHz — they broadcast shipment times nightly at 2 AM. "
-            "Don't use the phone. —R.' Somebody out there is taking a risk for you. "
-            "Don't waste it."
+            "The handwriting is cramped and hurried, like a man who knew he wasn't safe "
+            "standing still long enough to write slowly. It has been in a coat pocket "
+            "in Seattle in October, and the rain has had the worst of it:\n\n"
+            "   'Emergency frequency 415.? MHz — they broadcast shipment times\n"
+            "    nightly at 2 AM. Don't use the phone. —R.'\n\n"
+            "The last digit is a blue smear. Ten numbers it could be, and a man risked "
+            "his pension to write down all four. You'll have to find the last one "
+            "yourself, on the dial, in the dark. That's the job."
         ),
         "use_effects": {},
         "use_locations": [],
@@ -153,9 +161,13 @@ ITEM_DESCRIPTIONS = {
             "Stamped RESTRICTED — WAR DEPARTMENT in red on the cover, though the war "
             "is over and the department is busy becoming the Defense Department. Inside: "
             "frequency allocation tables, tuning procedures, band charts. Someone has "
-            "pencilled a note in the margin next to the emergency frequencies section: "
-            "'415.6 — check nightly.' The pencil is recent. The war surplus radio in "
-            "the warehouse office was built for exactly this frequency range."
+            "pencilled a note in the margin beside the emergency allocations — "
+            "'check nightly' — and underlined the 415 band twice. The war surplus set "
+            "in the warehouse office was built for exactly this range.\n\n"
+            "Folded inside the back cover, where every signals manual keeps it, is the "
+            "international code chart:\n\n"
+            + _MORSE_REFERENCE +
+            "\n\nYou learned this at Farragut in '43 and you have not needed it since."
         ),
         "use_effects": {
             "warehouse_office": (
@@ -207,8 +219,12 @@ ITEM_DESCRIPTIONS = {
             "The taller one is half-visible, and something about the set of his "
             "shoulders is familiar in the way that makes your jaw tighten. "
             "You've seen this man before. You'll know him when you find him.\n\n"
-            "The rear plate of the panel truck is just visible at the frame's edge: "
-            "WA-4471. Washington registration. You write it down."
+            "Behind the truck, half out of frame, sits a dark sedan. Its rear plate "
+            "catches just enough of the flash to read the first two figures and no "
+            "more:\n\n"
+            "   WA-44??\n\n"
+            "Washington registration. Two figures out of four. Somebody in this city "
+            "stood close enough to that car to have seen the rest of it."
         ),
         "use_effects": {},
         "use_locations": [],
@@ -328,16 +344,69 @@ ITEM_DESCRIPTIONS = {
     }
 }
 
+# What a close look at something actually gets you. Declarative so that adding a
+# discovery is a data change: set a flag, score it, open a line of questioning,
+# hand over a piece of the licence plate.
+EXAMINE_DISCOVERIES: Dict[str, Dict] = {
+    "photo": {
+        "sets": "discovered_suspect",
+        "fragment": "photo",
+        "topics": ["sedan"],
+        "text": "The face you'll know when you find it. The plate you'll have to work for.",
+    },
+    "cipher_wheel": {
+        "sets": "examined_cipher",
+        "topics": ["angels"],
+        "text": "Two rings and twenty-six settings. Somewhere in there, the memo is English.",
+    },
+    "informant_note": {
+        "sets": "found_emergency_frequency",
+        "score": 10,
+        "topics": ["frequency"],
+        "text": "You have the band and the hour. You do not have the last digit.",
+    },
+    "bulletin_notice": {
+        "sets": "identified_organization",
+        "score": 10,
+        "topics": ["sullivan"],
+        "text": "Northwest Maritime Imports. That's the front. You have your organization.",
+    },
+    "radio_manual": {
+        "sets": "has_morse_chart",
+        "topics": ["frequency"],
+        "text": "The code chart goes in your coat. You have a feeling about tonight.",
+    },
+    "note_1": {
+        "topics": ["mathers"],
+    },
+    "meeting_minutes": {
+        "topics": ["voss", "eagles"],
+    },
+    "manifest": {
+        "topics": ["harbormaster", "pier"],
+    },
+    "membership_register": {
+        "topics": ["eagles", "voss"],
+    },
+    "case_file": {
+        "topics": ["supplies"],
+    },
+}
+
 ITEM_COMBINATIONS = {
     frozenset(["notebook", "cipher_wheel"]): {
         "description": (
-            "You set the cipher wheel against the coded entries in your notebook and "
-            "rotate the inner ring through the alphabet, one letter at a time, until "
-            "the text resolves into plain English. It's slower than radio. "
-            "It's more reliable than most people."
+            "You hold the wheel against the coded page and turn it a few degrees, and "
+            "the letters underneath shuffle into different letters that are just as "
+            "meaningless.\n\n"
+            "It's the right tool. You can feel that much. But you're doing it standing "
+            "up, in bad light, holding both objects and a pencil with two hands.\n\n"
+            "This is work for a flat surface and an hour nobody interrupts. There's a "
+            "table in the evidence room with sixty years of scratches in it."
         ),
-        "result": "decoded_notes",
-        "removes_items": False
+        "result": "examined_cipher",
+        "removes_items": False,
+        "topics": ["angels"],
     },
     frozenset(["badge", "photo"]): {
         "description": (
@@ -348,21 +417,26 @@ ITEM_COMBINATIONS = {
             "Captain Harlan Voss. Port Authority liaison to the department. "
             "Badge on the thirty-second floor. His name is on three of those "
             "interdepartmental memos, and his signature is on the building inspector's "
-            "sign-off for the warehouse office. "
-            "That's your Harbormaster.\n\n"
+            "sign-off for the warehouse office.\n\n"
+            "Not the Harbormaster. The man who signs for him — which in a courtroom is "
+            "worth more, and in an alley is worth nothing at all.\n\n"
             "You put the photo in your inside pocket. You won't need to look at it again."
         ),
         "result": "identified_suspect",
-        "removes_items": False
+        "removes_items": False,
+        "topics": ["voss", "harbormaster"],
     }
 }
 
 class ItemManager:
-    def __init__(self):
+    def __init__(self, on_learn_topics=None):
         self.inventory: List[str] = []
         self.notes_found: int = 0
         self.discovered_combinations: Set[str] = set()
         self.removed_items: Set[str] = set()
+        # Injected by GameManager so an examination can open a line of
+        # questioning without the item layer knowing about dialogue.
+        self.on_learn_topics = on_learn_topics or (lambda *topics: None)
            
     _SCORED_ITEMS = {
         "badge", "cipher_wheel", "notebook", "binoculars", "radio_manual",
@@ -453,31 +527,54 @@ class ItemManager:
         try:
             if item in self.inventory:
                 if item in ITEM_DESCRIPTIONS:
-                    print_text("\n" + ITEM_DESCRIPTIONS[item]["detailed"])
-                    if item == "photo" and not game_state.get("discovered_suspect", False):
-                        game_state["discovered_suspect"] = True
-                        print_text("\nThe person in the photo looks familiar...")
-                    elif item == "cipher_wheel" and not game_state.get("examined_cipher", False):
-                        game_state["examined_cipher"] = True
-                        print_text("\nThe cipher wheel looks like it could decode encrypted messages...")
-                    elif item == "informant_note" and not game_state.get("found_emergency_frequency", False):
-                        game_state["found_emergency_frequency"] = True
-                        game_state["score"] = game_state.get("score", 0) + 10
-                        print_text("\nYou have the emergency frequency. They'll be broadcasting tonight.")
-                    elif item == "bulletin_notice" and not game_state.get("identified_organization", False):
-                        game_state["identified_organization"] = True
-                        game_state["score"] = game_state.get("score", 0) + 10
-                        print_text("\nNorthwest Maritime Imports — that's the front. You have your organization.")
+                    print_block("\n" + ITEM_DESCRIPTIONS[item]["detailed"])
+                    self._apply_discovery(item, game_state)
                 else:
                     print_text(f"You examine the {item} closely but find nothing unusual.")
             elif item in location_items:
                 print_text(f"You'll need to take the {item} first to examine it closely.")
             else:
                 print_text(f"You don't see any {item} here.")
-            
+
         except Exception as e:
             logging.error(f"Error examining item {item}: {e}")
             print_text("There was a problem examining the item.")
+
+    def _apply_discovery(self, item: str, game_state: Dict) -> None:
+        """Apply the declarative effects of examining an item, once each.
+
+        Everything an examination can do — set a flag, score, open a line of
+        questioning, hand over a piece of the plate — is data in
+        EXAMINE_DISCOVERIES rather than a branch in here.
+        """
+        discovery = EXAMINE_DISCOVERIES.get(item)
+        if not discovery:
+            return
+
+        flag = discovery.get("sets")
+        if flag and game_state.get(flag, False):
+            return  # Already worked this one out.
+        if flag:
+            game_state[flag] = True
+
+        fragment = discovery.get("fragment")
+        if fragment:
+            fragments = list(game_state.get("plate_fragments", []))
+            if fragment not in fragments:
+                fragments.append(fragment)
+                game_state["plate_fragments"] = fragments
+
+        points = discovery.get("score", 0)
+        if points:
+            game_state["score"] = game_state.get("score", 0) + points
+
+        note = discovery.get("text")
+        if note:
+            print_text("\n" + note)
+
+        topics = discovery.get("topics", [])
+        if topics:
+            self.on_learn_topics(*topics)
 
     def use_item(self, item: str, current_location: str, game_state: Dict) -> None:
         """Use an item from the inventory."""
@@ -550,6 +647,7 @@ class ItemManager:
                 game_state[result['result']] = True
                 game_state["score"] = game_state.get("score", 0) + 15
                 self.discovered_combinations.add(combo)
+                self.on_learn_topics(*result.get("topics", []))
                 return True
             elif combo in self.discovered_combinations:
                 print_text("You've already discovered what these items reveal together.")

@@ -43,6 +43,12 @@ def _make_game_instance(game_state=None, location=None):
 
     instance.puzzle_manager.get_state.return_value = {"solved_puzzles": []}
 
+    instance.dialogue_manager.get_state.return_value = {
+        "known_topics": ["case", "supplies"],
+        "met": [],
+        "spoken": [],
+    }
+
     return instance
 
 

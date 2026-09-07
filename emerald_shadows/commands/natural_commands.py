@@ -7,12 +7,25 @@ from typing import Dict, Tuple
 _ARTICLES = {"the", "a", "an"}
 
 
+_ADDRESS_PREFIXES = ("to ", "with ", "at ")
+
+
 def _strip_articles(text: str) -> str:
     """Remove leading articles from a noun phrase: 'the note' -> 'note'."""
     words = text.split()
     if words and words[0] in _ARTICLES:
         words = words[1:]
     return " ".join(words)
+
+
+def _strip_person(text: str) -> str:
+    """Normalise how a player addresses somebody: 'to the barman' -> 'barman'."""
+    text = text.strip()
+    for prefix in _ADDRESS_PREFIXES:
+        if text.startswith(prefix):
+            text = text[len(prefix):].strip()
+            break
+    return _strip_articles(text)
 
 
 class NaturalCommandHandler:
@@ -51,6 +64,15 @@ class NaturalCommandHandler:
             "score": "score",
             "exits": "exits",
             "ways": "exits",
+            # Investigation
+            "case": "case",
+            "casebook": "case",
+            "review": "case",
+            "notes": "case",
+            "topics": "topics",
+            "questions": "topics",
+            "listen": "listen",
+            "arrest": "arrest",
         }
 
         self.verb_aliases: Dict[str, str] = {
@@ -74,6 +96,21 @@ class NaturalCommandHandler:
             "leave": "drop",
             "put": "drop",
             "discard": "drop",
+            # Conversation
+            "ask": "ask",
+            "question": "ask",
+            "talk": "talk",
+            "speak": "talk",
+            "interrogate": "talk",
+            # Puzzle operation
+            "turn": "turn",
+            "rotate": "turn",
+            "spin": "turn",
+            "tune": "tune",
+            "tap": "tap",
+            "send": "tap",
+            "listen": "listen",
+            "arrest": "arrest",
         }
 
         self.trolley_commands = {"next", "off", "status", "history"}
@@ -99,6 +136,14 @@ class NaturalCommandHandler:
             noun = _strip_articles(command[len("look at "):].strip())
             return "examine", noun
 
+        # "ask <person> about <topic>" → ("ask", "person|topic")
+        if first_word in ("ask", "question"):
+            return "ask", self._parse_ask(command[len(first_word):].strip())
+
+        # "talk to <person>" → ("talk", "person")
+        if first_word in ("talk", "speak", "interrogate"):
+            return "talk", _strip_person(command[len(first_word):].strip())
+
         # Single word commands (inventory, help, look, score, etc.)
         if command in self.single_word_aliases:
             return self.single_word_aliases[command], ""
@@ -120,4 +165,23 @@ class NaturalCommandHandler:
             argument = argument[3:].strip()
         if verb == "take" and argument.startswith("up "):
             argument = _strip_articles(argument[3:].strip())
+        if verb in ("tap", "listen") and argument.startswith("to "):
+            argument = _strip_articles(argument[3:].strip())
         return verb, argument
+
+    @staticmethod
+    def _parse_ask(rest: str) -> str:
+        """Split 'ches about the harbormaster' into 'ches|harbormaster'.
+
+        Either half may be empty: 'ask about the sedan' leaves the person for the
+        game to infer from who's standing there, and a bare 'ask ches' just opens
+        the conversation.
+        """
+        rest = rest.strip()
+        for separator in (" about ", " re ", " regarding "):
+            if separator in rest:
+                person, topic = rest.split(separator, 1)
+                return f"{_strip_person(person)}|{_strip_articles(topic.strip())}"
+        if rest.startswith("about "):
+            return f"|{_strip_articles(rest[len('about '):].strip())}"
+        return f"{_strip_person(rest)}|"

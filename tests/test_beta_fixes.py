@@ -76,6 +76,7 @@ def test_exits_command_lists_ways_out(monkeypatch):
     gm = GameManager()
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda t, **_: messages.append(t))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda t, **_: messages.append(t))
     gm.process_command("exits")
     combined = " ".join(messages)
     assert "outside" in combined and "upstairs" in combined
@@ -96,6 +97,7 @@ def test_take_all_in_empty_location(monkeypatch):
     gm = GameManager()
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda t, **_: messages.append(t))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda t, **_: messages.append(t))
     gm.location_manager.locations["police_station"].items = []
     gm.process_command("take all")
     assert any("nothing here" in m.lower() for m in messages)

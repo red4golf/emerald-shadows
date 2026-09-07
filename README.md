@@ -4,11 +4,21 @@ A noir detective text adventure set in 1947 post-war Seattle. As Detective Johnn
 
 ## Highlights
 
-- **Fully text-driven investigation** with natural-language style commands.
-- **Historically grounded locations** including police headquarters, Smith Tower, and the underground tunnels.
-- **Rich inventory & puzzle systems** covering Morse code, cipher wheels, radio scans, and item combinations.
+- **Witnesses you actually interrogate.** `ask <person> about <topic>`. Topics are
+  knowledge, not permission — a question you learn at the bar can be put to the
+  elevator operator, and different people hold different pieces of the same fact.
+- **Puzzles you work rather than answer.** Spin a Caesar disc through 26 settings
+  and watch for the one that turns noise into English. Sweep a radio band for a
+  frequency the rain took the last digit off. Decode real Morse against the chart
+  in your radio manual. No passwords to retype from a note.
+- **A case in three acts.** Legwork, then heat — the city notices you're asking —
+  then Pier 7 after midnight, where the case closes only if you can prove it.
+- **A casebook**, not a score. `case` shows what's established, who's named, and
+  what's still open.
+- **Historically grounded locations** including police headquarters, Smith Tower,
+  the Eagles hall, and the tunnels under Pioneer Square.
 - **Integrated trolley network** for moving between districts.
-- **Auto-save plus manual save slots** so you never lose a lead.
+- **Auto-save on every change of scene**, plus manual save slots.
 
 ## Installation
 
@@ -36,17 +46,31 @@ pip install -r requirements.txt
 python -m emerald_shadows
 ```
 
-During play you can always type `help` to see the available actions. Common verbs include `look`, `inventory`, `take <item>`, `use <item>`, `go <direction>`, and `solve` for puzzles.
+During play, `help` lists everything. The verbs you'll reach for most:
+
+| | |
+|---|---|
+| `look`, `examine <item>`, `take <item>` | the basics |
+| `talk to <person>`, `ask <person> about <topic>`, `topics` | working a witness |
+| `solve`, `turn wheel`, `tune <freq>`, `listen`, `tap <answer>` | working the evidence |
+| `case` | where you are and what's left |
+| `arrest` | when you can prove it |
 
 ## Project Structure
 ```
 emerald-shadows/
 ├── emerald_shadows/
 │   ├── game_manager.py        # Core game loop
+│   ├── acts.py                # Three-act progression + the finale gate
+│   ├── casebook.py            # The `case` command
+│   ├── dialogue.py            # Conversation engine
+│   ├── config_dialogue.py     # Who knows what (data)
+│   ├── codes.py               # Caesar + Morse codecs (pure functions)
 │   ├── location_manager.py    # Movement + descriptions
 │   ├── item_manager.py        # Inventory handling
 │   ├── puzzles/               # Puzzle subsystems
 │   ├── commands/              # Natural-language parsing
+│   ├── media.py               # Optional art/audio layer
 │   └── utils.py               # Display + save helpers
 ├── tests/                     # Pytest suite
 ├── docs/

@@ -5,20 +5,26 @@ import logging
 from pathlib import Path
 import sys
 
+from copy import deepcopy
+
+from . import acts, casebook
 from .config import (
-    SAVE_DIR, LOG_FILE, LOG_FORMAT, INITIAL_GAME_STATE, 
-    REQUIRED_ITEMS, REQUIRED_STATES, AUTO_SAVE_INTERVAL,
-    BASIC_COMMANDS, COMPLEX_COMMANDS
+    SAVE_DIR, LOG_FILE, LOG_FORMAT, INITIAL_GAME_STATE,
+    AUTO_SAVE_INTERVAL, BASIC_COMMANDS, COMPLEX_COMMANDS
 )
+from .dialogue import DialogueManager
 from .location_manager import LocationManager
 from .item_manager import ItemManager
 from .puzzles import PuzzleManager
 from .commands.natural_commands import NaturalCommandHandler
-from .utils import SaveLoadManager, print_text, clear_screen
+from .utils import SaveLoadManager, print_block, print_text, clear_screen
 from .game_art import display_title_screen
 from .media import present
 
 TROLLEY_COMMANDS = {"next", "off", "status", "history"}
+
+# Verbs that operate a puzzle in the room rather than acting on the world.
+PUZZLE_VERBS = {"turn", "tune", "tap", "listen"}
 
 class GameManager:
     """Main game manager class handling game state and core gameplay loop."""
@@ -28,11 +34,13 @@ class GameManager:
         # Ensure save directory exists
         Path(SAVE_DIR).mkdir(parents=True, exist_ok=True)
 
+        # Initialize game state. Deep copy: the initial state holds mutable
+        # lists (plate fragments, frequencies tried) that must not be shared
+        # between game instances or with the config module.
+        self.game_state = deepcopy(INITIAL_GAME_STATE)
+
         # Initialize managers
         self.init_managers()
-
-        # Initialize game state
-        self.game_state = INITIAL_GAME_STATE.copy()
 
         # Save/autosave tracking
         self.last_save_time = datetime.now()
@@ -48,7 +56,10 @@ class GameManager:
         """Initialize all game subsystem managers."""
         self.location_manager = LocationManager()
         self.puzzle_manager = PuzzleManager()
-        self.item_manager = ItemManager()
+        self.dialogue_manager = DialogueManager()
+        # Examining something can open a line of questioning; the item layer
+        # reaches dialogue through this callback rather than importing it.
+        self.item_manager = ItemManager(on_learn_topics=self.dialogue_manager.learn)
         self.command_handler = NaturalCommandHandler()
         self.save_load_manager = SaveLoadManager(SAVE_DIR)
 
@@ -71,22 +82,34 @@ class GameManager:
             
         if command == "quit":
             return self.handle_quit()
-            
+
+        # A bare word that names a way out of this room is movement, and it
+        # outranks the parser's direction aliases. Without this, 'back' is
+        # rewritten to 'south' before anyone checks whether the room actually
+        # has an exit called 'back' — which is how the Eagles lounge became
+        # unreachable. Trolley commands keep their own handling.
+        words = command.split()
+        if (len(words) == 1 and words[0] not in TROLLEY_COMMANDS
+                and self.location_manager.resolve_exit(words[0])):
+            self._handle_movement(words[0])
+            return True
+
         command_type, args = self.command_handler.understand_command(command)
 
         if not command_type:
-            # A bare named exit ("outside", "upstairs", "tavern", "o") is movement.
-            words = command.split()
-            if len(words) == 1 and self.location_manager.resolve_exit(words[0]):
-                self._handle_movement(words[0])
-                return True
-            print_text("Diamond considered that, then decided it wasn't productive. (Type 'help' for commands.)")
+            # Named exits were already resolved above, so this really is a miss.
+            self._handle_unparsed(command)
             return True
-        
+
         if command_type in TROLLEY_COMMANDS:
             self._handle_trolley_command(command_type)
             return True
-        
+
+        # Verbs that operate a puzzle in this room take precedence, so 'listen'
+        # in the tunnels means the pipe and not the general-purpose command.
+        if command_type in PUZZLE_VERBS and self._handle_puzzle_verb(command_type, args):
+            return True
+
         if command_type not in BASIC_COMMANDS and command_type not in COMPLEX_COMMANDS:
             logging.warning(f"Invalid command type received: {command_type}")
             print_text("I don't understand that command. Type 'help' for available commands.")
@@ -107,6 +130,15 @@ class GameManager:
             "drop": self._handle_drop_item,
             "score": self._handle_score,
             "exits": self._handle_exits,
+            "case": self._handle_case,
+            "topics": self._handle_topics,
+            "ask": self._handle_ask,
+            "talk": self._handle_talk,
+            "arrest": self._handle_arrest,
+            "turn": self._handle_unusable_verb,
+            "tune": self._handle_unusable_verb,
+            "tap": self._handle_unusable_verb,
+            "listen": self._handle_listen,
         }
         
         if command_type in handlers:
@@ -143,6 +175,15 @@ class GameManager:
         available_items = self.location_manager.get_available_items()
         self.item_manager.examine_item(item, available_items, self.game_state)
 
+    def _announce_company(self) -> None:
+        """Name anybody standing here worth talking to."""
+        presence = self.dialogue_manager.describe_presence(
+            self.location_manager.current_location,
+            acts.current_act(self.game_state),
+        )
+        if presence:
+            print_text("\n" + presence)
+
     def _handle_look(self, _: Any) -> None:
         """Describe the current location, respecting darkness."""
         if self.location_manager.is_dark() and not self.game_state.get("flashlight_lit", False):
@@ -153,6 +194,7 @@ class GameManager:
             return
         description = self.location_manager.get_location_description()
         print_text("\n" + description)
+        self._announce_company()
 
     def _handle_inventory(self, _: Any) -> None:
         """Handle inventory command."""
@@ -230,7 +272,126 @@ class GameManager:
     def _handle_score(self, _: Any) -> None:
         """Display the current score."""
         score = self.game_state.get("score", 0)
-        print_text(f"\nCase progress: {score} points.")
+        print_text(f"\n{acts.act_label(self.game_state)}. Case progress: {score} points.")
+        print_text("Type 'case' for the casebook.")
+
+    def _handle_case(self, _: Any) -> None:
+        """Show the casebook: what's established, who's named, what's open."""
+        print_block("\n" + casebook.render(
+            self.game_state,
+            self.item_manager.get_inventory(),
+            self.dialogue_manager.get_state(),
+        ))
+
+    def _handle_topics(self, _: Any) -> None:
+        """List the lines of questioning Diamond has earned."""
+        self.dialogue_manager.list_topics()
+
+    def _handle_talk(self, target: str) -> None:
+        """Open a conversation with somebody in this room."""
+        self.dialogue_manager.talk_to(
+            target,
+            self.location_manager.current_location,
+            acts.current_act(self.game_state),
+            self.game_state,
+        )
+
+    def _handle_ask(self, args: str) -> None:
+        """Put a question to somebody. ``args`` arrives as 'person|topic'."""
+        person, _, topic = (args or "").partition("|")
+        if not topic.strip():
+            # 'ask ches' is just an opening — treat it as walking up to them.
+            self._handle_talk(person)
+            return
+
+        granted = self.dialogue_manager.ask(
+            person,
+            topic,
+            self.location_manager.current_location,
+            acts.current_act(self.game_state),
+            self.game_state,
+        )
+        if granted:
+            self.location_manager.add_item(granted)
+            print_text(f"\n[{granted} — take it before you lose it.]")
+
+    def _handle_puzzle_verb(self, verb: str, args: str) -> bool:
+        """Try to route an operating verb to the puzzle in this room."""
+        return self.puzzle_manager.interact(
+            self.location_manager.current_location,
+            verb,
+            args,
+            self.item_manager.get_inventory(),
+            self.game_state,
+        )
+
+    def _handle_listen(self, _: Any) -> None:
+        """Listening anywhere the room has nothing to say back."""
+        print_text(
+            "\nYou stand still and listen. Rain, the harbour, a city going about its "
+            "business without you. Nothing that's trying to tell you anything."
+        )
+
+    def _handle_unusable_verb(self, _: Any) -> None:
+        """A puzzle verb typed where there's no puzzle to work."""
+        print_text("\nThere's nothing here to do that with.")
+
+    def _handle_unparsed(self, command: str) -> None:
+        """A command the parser couldn't place.
+
+        Saying only that it didn't land is charming exactly once. Point at what
+        is actually available here instead.
+        """
+        print_text("\nDiamond considered that, then decided it wasn't productive.")
+
+        exits = self.location_manager.get_valid_exits()
+        if exits:
+            print_text("Ways out: " + ", ".join(exits))
+
+        items = self.location_manager.get_available_items()
+        if items:
+            print_text("Here to be had: " + ", ".join(items))
+
+        people = self.dialogue_manager.people_here(
+            self.location_manager.current_location,
+            acts.current_act(self.game_state),
+        )
+        if people:
+            from .config_dialogue import NPCS
+            print_text("Worth asking: " + ", ".join(NPCS[k]["name"] for k in people))
+
+        verbs = self.puzzle_manager.verbs_at(self.location_manager.current_location)
+        if verbs:
+            print_text("Something here can be worked: try 'solve'.")
+
+        print_text("('help' for the full list, 'case' for where you are.)")
+
+    def _handle_arrest(self, _: Any) -> None:
+        """The finale. Only lands at Pier 7, and only with the evidence."""
+        if self.location_manager.current_location != "pier_seven":
+            print_text(
+                "\nYou've nobody in front of you to arrest, and a warrant sworn out on "
+                "an empty street is just a man talking to himself."
+            )
+            return
+
+        missing = acts.missing_finale_items(self.item_manager.get_inventory())
+        if missing:
+            print_block(
+                "\nYou get as far as the shed door before you understand you can't "
+                "finish this tonight.\n\n"
+                "A man with a clipboard and a ship half-unloaded is not an arrest. "
+                "It's an incident report, and a warning to everybody upstream, and "
+                "eighteen months of somebody else's work in the harbour.\n\n"
+                "You'd need, and do not have:\n"
+                + "\n".join(f"  - {acts.FINALE_ITEMS[item]}" for item in missing)
+                + "\n\nYou go back up the pier the way you came. Nobody sees you. "
+                "That's the only mercy in it."
+            )
+            return
+
+        self.game_state["case_closed"] = True
+        self.show_victory()
 
     def _handle_exits(self, _: Any) -> None:
         """List the ways out of the current location."""
@@ -290,19 +451,37 @@ class GameManager:
         print_text("\nThanks for playing!")
         return False
 
-    def check_auto_save(self) -> None:
-        """Check and perform auto-save if needed."""
+    def check_auto_save(self, moved: bool = False) -> None:
+        """Auto-save at meaningful moments.
+
+        A turn-based game checkpoints best on a change of scene, so a move
+        triggers the save; the interval is kept as a floor so a player working
+        one room for a long stretch is still covered.
+        """
         current_time = datetime.now()
-        if (current_time - self.last_save_time).seconds >= self.auto_save_interval:
+        elapsed = (current_time - self.last_save_time).total_seconds()
+        if moved or elapsed >= self.auto_save_interval:
             self.save_load_manager.save_game(self, "autosave")
             self.last_save_time = current_time
 
     def check_game_progress(self) -> bool:
-        """Check if the player has solved the case."""
-        return (
-            all(item in self.item_manager.get_inventory() for item in REQUIRED_ITEMS) and
-            all(self.game_state[state] for state in REQUIRED_STATES)
-        )
+        """The case is closed when the arrest at Pier 7 has been made."""
+        return bool(self.game_state.get("case_closed", False))
+
+    def check_act_progress(self) -> None:
+        """Advance the act if the investigation has earned it."""
+        advanced = acts.check_advance(self.game_state)
+        if advanced is None:
+            return
+
+        # Act three opens Pier 7. The gate is a plain flag so the location
+        # table stays declarative.
+        if advanced >= 3:
+            self.game_state["act_three"] = True
+
+        opening = acts.opening_text(advanced)
+        if opening:
+            print_block("\n" + opening)
 
     def start_game(self) -> None:
         """Main game loop."""
@@ -311,16 +490,25 @@ class GameManager:
             self._last_location = None
 
             while True:
-                self.check_auto_save()
-
                 # Show location description only when location changes
                 current_location = self.location_manager.current_location
-                if current_location != self._last_location:
+                moved = current_location != self._last_location
+                if moved:
                     print_text("\n" + self.location_manager.get_location_description())
+                    self._announce_company()
                     self._last_location = current_location
 
-                # Get and process command
-                command = input("\n> ").strip().lower()
+                self.check_auto_save(moved=moved)
+
+                # Get and process command. EOF means the input stream ended —
+                # a closed pipe or a piped script — which is a clean exit, not
+                # a crash.
+                try:
+                    command = input("\n> ").strip().lower()
+                except EOFError:
+                    print_text("\nInput ended. Saving and closing the file.")
+                    self.save_load_manager.save_game(self, "autosave")
+                    break
 
                 if not self.process_command(command):
                     break
@@ -329,10 +517,12 @@ class GameManager:
                 if self._check_darkness():
                     break
 
-                # Check win condition
+                # The case can only be closed by the arrest at Pier 7.
                 if self.check_game_progress():
-                    self.show_victory()
                     break
+
+                # Escalate the act if this turn earned it
+                self.check_act_progress()
 
         except KeyboardInterrupt:
             print_text("\nGame interrupted. Saving progress...")
@@ -381,7 +571,21 @@ class GameManager:
             "  use <item>            — put an item to work; may reveal a puzzle\n"
             "  combine <x> with <y>  — two clues are sometimes one clue\n"
             "  inventory (or i)      — check what you're carrying\n"
-            "  score                 — check your case progress\n\n"
+            "  case                  — your casebook: established, named, still open\n"
+            "  score                 — the short version of the same thing\n\n"
+            "PEOPLE\n"
+            "  Nobody in this city volunteers anything. You have to ask.\n"
+            "  talk to <person>      — walk up to somebody and see what they'll give\n"
+            "  ask <person> about <topic>   — put a specific question to them\n"
+            "  topics                — what you currently know enough to ask about\n\n"
+            "  A question you learn from one person can be put to anybody. That's\n"
+            "  the job: go back around town with a better question than you had.\n\n"
+            "WORKING THE EVIDENCE\n"
+            "  solve                 — lay out whatever this room has to be worked\n"
+            "  turn wheel [to <letter>]     — the cipher disc, at a flat table\n"
+            "  tune <frequency>      — sweep a radio band, e.g. 'tune 415.3'\n"
+            "  listen / tap <answer> — hear a signal, and answer it\n"
+            "  arrest                — end it, when you can prove it\n\n"
             "HOUSEKEEPING\n"
             "  save / load   — the city will still be here when you come back\n"
             "  quit          — end the session\n\n"
@@ -393,7 +597,7 @@ class GameManager:
             "  (The foregoing is in tribute to a certain text adventure from 1980\n"
             "   whose Great Underground Empire bears a passing resemblance to this city.)"
         )
-        print_text(help_text)
+        print_block(help_text)
 
     def show_victory(self) -> None:
         """Display victory message."""
@@ -451,7 +655,7 @@ class GameManager:
             "   And to Infocom, whose Great Underground Empire\n"
             "   taught a generation that stories could live inside machines."
         )
-        print_text(victory_text)
+        print_block(victory_text)
 
 if __name__ == "__main__":
     game = GameManager()

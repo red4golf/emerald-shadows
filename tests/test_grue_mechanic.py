@@ -68,6 +68,7 @@ def test_check_darkness_first_turn_prints_warning(monkeypatch, gm, capsys):
     monkeypatch.setattr(gm.location_manager, "is_dark", lambda: True)
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda t, **_: messages.append(t))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda t, **_: messages.append(t))
     gm.game_state["flashlight_lit"] = False
     gm.game_state["dark_turns"] = 0
     gm._check_darkness()
@@ -150,6 +151,7 @@ def test_grue_death_prints_eaten_message(monkeypatch, gm):
     monkeypatch.setattr(gm.save_load_manager, "list_saves", lambda: [])
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda t, **_: messages.append(t))
+    monkeypatch.setattr(game_manager_module, "print_block", lambda t, **_: messages.append(t))
     gm._handle_grue_death()
     combined = " ".join(messages).lower()
     assert "grue" in combined
