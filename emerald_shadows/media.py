@@ -65,7 +65,43 @@ MOMENTS: Dict[str, Dict[str, Any]] = {
         "animate": True,
         "audio": None,  # future: sounds/victory_radio.wav
     },
+    # District sigils — shown once, on first arrival. Key form: "enter_<location>".
+    "enter_smith_tower": {
+        "art": game_art.SMITH_TOWER_SIGIL,
+        "color": game_art.AMBER,
+        "animate": False,
+        "audio": None,
+    },
+    "enter_docks": {
+        "art": game_art.DOCKS_SIGIL,
+        "color": None,
+        "animate": False,
+        "audio": None,
+    },
+    "enter_pike_place": {
+        "art": game_art.PIKE_PLACE_SIGIL,
+        "color": game_art.RED,  # neon
+        "animate": False,
+        "audio": None,
+    },
+    "enter_eagles_hall": {
+        "art": game_art.EAGLES_HALL_SIGIL,
+        "color": game_art.AMBER,
+        "animate": False,
+        "audio": None,
+    },
+    "enter_underground_tunnels": {
+        "art": game_art.TUNNELS_SIGIL,
+        "color": game_art.BRIGHT_GREEN,  # what waits below is grue-adjacent
+        "animate": True,
+        "audio": None,  # future: sounds/tunnel_drip.wav
+    },
 }
+
+
+def present_location(location: str) -> bool:
+    """Present a location's first-visit sigil, if it has one. Safe no-op otherwise."""
+    return present(f"enter_{location}")
 
 
 def _emit(text: str) -> None:

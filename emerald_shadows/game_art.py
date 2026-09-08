@@ -16,6 +16,68 @@ BRIGHT_GREEN = "\033[92m"
 # Two eyes and a maw surfacing out of the dark. You never really see a grue —
 # you see what little the dark lets you. Kept under 60 columns so it survives a
 # narrow terminal (DisplayManager clamps width to a 60-column minimum).
+# --- District sigils -------------------------------------------------------
+# Small marks shown once, on first arrival at a landmark. Curated, not
+# exhaustive: most rooms get prose only. All pieces stay under 60 columns
+# (DisplayManager's minimum terminal width).
+
+# Forty-two stories of terracotta and ambition, pyramid cap lit.
+SMITH_TOWER_SIGIL = r"""
+              /\
+             /  \
+            |----|
+            | [] |
+            | [] |
+            | [] |
+            | [] |
+          __|    |__
+         |  [] []  |
+         |  [] []  |
+         |__[]_[]__|
+"""
+
+# The working waterfront.
+DOCKS_SIGIL = r"""
+             __
+            (  )
+             ||
+         ----++----
+             ||
+             ||
+         \   ||   /
+          \_ || _/
+            \||/
+             --
+"""
+
+# The Public Market Center sign and clock, neon since the thirties.
+PIKE_PLACE_SIGIL = r"""
+     _____________________________
+    |   PUBLIC  MARKET  CENTER    |
+    |_____________________________|
+        ||      .-"-.      ||
+        ||     ( 7:05 )    ||
+        ||      `---'      ||
+"""
+
+# The crest over the door at Seventh and Union.
+EAGLES_HALL_SIGIL = r"""
+      ______________________________
+     / FRATERNAL ORDER OF EAGLES    \
+     \   Aerie No. 1 --- Est. 1898  /
+      `----------------------------'
+"""
+
+# The mouth of the underground. The dark inside is not decorative.
+TUNNELS_SIGIL = r"""
+          .-===========-.
+         //   _______   \\
+        ||   /███████\   ||
+        ||   |███████|   ||
+        ||   |███████|   ||
+      __||___|███████|___||__
+"""
+
 # The case-file stamp shown before the closing expense-account memo.
 # Kept under 60 columns (DisplayManager's minimum terminal width).
 VICTORY_ART = r"""
