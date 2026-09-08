@@ -8,6 +8,7 @@ from .config import DEFAULT_GATE_MESSAGE, GATE_MESSAGES, STARTING_LOCATION
 from .config_locations import LOCATIONS
 from .trolley_system import TrolleySystem, TrolleyState
 from .utils import print_text
+from .media import present_location
 
 @dataclass
 class Location:
@@ -160,11 +161,8 @@ class LocationManager:
             new_location = self.locations[new_location_name]
             
             # Handle first visit
-            if new_location.first_visit:
-                new_location.first_visit = False
-                if new_location.historical_note:
-                    print_text(f"\nHistorical Note: {new_location.historical_note}")
-            
+            self._announce_first_visit(new_location_name)
+
             return True
             
         except LocationError as e:
@@ -279,13 +277,20 @@ class LocationManager:
             return False
 
         self.current_location = destination
-        arrived = self.locations[destination]
-        if arrived.first_visit:
-            arrived.first_visit = False
-            if arrived.historical_note:
-                print_text(f"\nHistorical Note: {arrived.historical_note}")
+        self._announce_first_visit(destination)
         logging.info("Disembarked trolley at %s", destination)
         return True
+
+    def _announce_first_visit(self, location_name: str) -> None:
+        """On first arrival somewhere: show its district sigil (if it has one)
+        and its historical note. No-op on later visits."""
+        location = self.locations[location_name]
+        if not location.first_visit:
+            return
+        location.first_visit = False
+        present_location(location_name)
+        if location.historical_note:
+            print_text(f"\nHistorical Note: {location.historical_note}")
 
     def show_historical_note(self, location: str) -> None:
         """Display historical information about the specified location."""

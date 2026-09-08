@@ -106,8 +106,14 @@ Cheap, high-impact, no new dependencies, reversible.
 - [x] **Grue death art**, wired through `present("grue_death")` with a slow,
       line-by-line reveal. *(Vertical slice — proves the whole pattern.)*
 - [x] **Victory art** — CASE CLOSED file stamp before the expense-account memo.
-- [ ] **Underground tunnels** entrance art (sets up the grue threat).
-- [ ] **Per-district header sigils** (small, ≤ 60 cols) shown on first visit.
+- [x] **Underground tunnels** entrance art — brick arch, solid-black mouth,
+      grue-green, revealed line by line on first descent.
+- [x] **District sigils** shown once on first arrival, via
+      `media.present_location` from the shared first-visit announcer:
+      Smith Tower, the docks anchor, the Pike Place Market sign (neon red),
+      the Eagles crest banner, and the tunnels arch. Curated on purpose —
+      most rooms stay prose-only; the starting bullpen is covered by the
+      title screen.
 - [ ] Asset guidelines: keep art ≤ 60 columns (DisplayManager's min width);
       curate a few strong pieces rather than art everywhere.
 
@@ -209,5 +215,8 @@ Bigger swings to deepen the noir RPG once the multimedia layer lands:
   end-to-end walkthrough test. 400 tests passing.
 - **Backlog cleared + victory art (PR #11 rework).** Remaining review defects
   fixed on top of the overhaul; config-integrity tests (items, exits, NPCs);
-  CASE CLOSED stamp before the victory memo. 411 tests passing. Phase 1
-  remaining: tunnels entrance art, district sigils.
+  CASE CLOSED stamp before the victory memo. 411 tests passing.
+- **Phase 1 art complete.** Tunnels entrance arch + district sigils
+  (Smith Tower, docks, Pike Place, Eagles Hall) on first visit; first-visit
+  announcement logic deduplicated between walking and trolley arrival.
+  420 tests passing. Next phase: CRT color pass, then the audio pilot.
