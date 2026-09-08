@@ -8,7 +8,8 @@ from .config import DEFAULT_GATE_MESSAGE, GATE_MESSAGES, STARTING_LOCATION
 from .config_locations import LOCATIONS
 from .trolley_system import TrolleySystem, TrolleyState
 from .utils import print_text
-from .media import present_location
+from .media import present_location, style
+from .game_art import DIM
 
 @dataclass
 class Location:
@@ -290,13 +291,13 @@ class LocationManager:
         location.first_visit = False
         present_location(location_name)
         if location.historical_note:
-            print_text(f"\nHistorical Note: {location.historical_note}")
+            print_text(style(f"\nHistorical Note: {location.historical_note}", DIM))
 
     def show_historical_note(self, location: str) -> None:
         """Display historical information about the specified location."""
         try:
             if location in self.locations and self.locations[location].historical_note:
-                print_text(f"\nHistorical Note: {self.locations[location].historical_note}")
+                print_text(style(f"\nHistorical Note: {self.locations[location].historical_note}", DIM))
             else:
                 print_text("No historical information available for this location.")
            

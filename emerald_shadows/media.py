@@ -39,9 +39,50 @@ def art_enabled() -> bool:
         return False
 
 
+_vt_ready = False
+
+
+def _ensure_vt() -> None:
+    """Best-effort: enable ANSI (VT) processing on legacy Windows consoles.
+
+    Windows Terminal understands ANSI out of the box; classic conhost supports
+    it but only after SetConsoleMode enables ENABLE_VIRTUAL_TERMINAL_PROCESSING.
+    Failure is harmless — color_enabled() gating means we only ever get here on
+    an interactive terminal, and a console that refuses just shows plain text
+    with stray codes suppressed by the NO_COLOR escape hatch.
+    """
+    global _vt_ready
+    if _vt_ready or os.name != "nt":
+        _vt_ready = True
+        return
+    try:
+        import ctypes
+
+        kernel32 = ctypes.windll.kernel32
+        handle = kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
+        mode = ctypes.c_uint32()
+        if kernel32.GetConsoleMode(handle, ctypes.byref(mode)):
+            kernel32.SetConsoleMode(handle, mode.value | 0x0004)  # VT processing
+    except Exception:
+        pass
+    _vt_ready = True
+
+
 def color_enabled() -> bool:
     """ANSI color is allowed only when art is, and honors the NO_COLOR convention."""
-    return art_enabled() and not _flag_on("NO_COLOR")
+    if not (art_enabled() and not _flag_on("NO_COLOR")):
+        return False
+    _ensure_vt()
+    return True
+
+
+def style(text: str, color: str) -> str:
+    """Wrap text in an ANSI color when the terminal can take it; otherwise
+    return it unchanged. The single place gameplay code asks for color, so
+    the NO_COLOR / non-TTY contract holds everywhere by construction."""
+    if not color or not color_enabled():
+        return text
+    return f"{color}{text}{game_art.RESET}"
 
 
 def audio_enabled() -> bool:

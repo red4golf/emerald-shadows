@@ -18,8 +18,8 @@ from .item_manager import ItemManager
 from .puzzles import PuzzleManager
 from .commands.natural_commands import NaturalCommandHandler
 from .utils import SaveLoadManager, print_block, print_text, clear_screen
-from .game_art import display_title_screen
-from .media import present
+from .game_art import display_title_screen, BRIGHT_GREEN
+from .media import present, style
 
 TROLLEY_COMMANDS = {"next", "off", "status", "history"}
 
@@ -192,7 +192,7 @@ class GameManager:
     def _handle_look(self, _: Any) -> None:
         """Describe the current location, respecting darkness."""
         if self.location_manager.is_dark() and not self.game_state.get("flashlight_lit", False):
-            print_text(DARK_WARNING)
+            print_text(style(DARK_WARNING, BRIGHT_GREEN))
             return
         description = self.location_manager.get_location_description()
         print_text("\n" + description)
@@ -416,7 +416,7 @@ class GameManager:
 
         self.game_state["dark_turns"] = self.game_state.get("dark_turns", 0) + 1
         if self.game_state["dark_turns"] == 1:
-            print_text(DARK_WARNING)
+            print_text(style(DARK_WARNING, BRIGHT_GREEN))
             return False
         return self._handle_grue_death()
 

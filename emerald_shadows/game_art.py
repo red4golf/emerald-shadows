@@ -145,14 +145,18 @@ ____|_____|__|___|_|___|__|_____|______|_____|__|_____|______
 
 def display_title_screen() -> None:
     """Display the game's title screen with both logo and skyline."""
+    # Imported here, not at module top: media imports this module's art
+    # constants, so a top-level import would be circular.
+    from .media import style
+
     clear_screen()
-    print(TITLE_ART)
+    print(style(TITLE_ART, BRIGHT_GREEN))
     print_text(
         "Seattle, Washington. October 1947.\n"
         "The war is two years over and the city hasn't slept.\n"
         "Neither have you.\n"
     )
-    print(SEATTLE_SKYLINE)
+    print(style(SEATTLE_SKYLINE, DIM))
     print_text(
         "\nYou are Johnny Diamond, Detective.\n"
         "You are standing at the beginning of a long investigation.\n"
