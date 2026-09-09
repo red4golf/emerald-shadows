@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import Dict, List
 
 from .acts import ACT_NAMES, current_act
+from .game_art import AMBER
+from .media import style
 from .puzzles.car_puzzle import render_plate
 
 # Established facts. Shown once the flag is set.
@@ -85,7 +87,7 @@ OPEN: List[Dict[str, str]] = [
 
 
 def _rule(title: str) -> str:
-    return f"\n{title}\n{'-' * len(title)}"
+    return style(f"\n{title}\n{'-' * len(title)}", AMBER)
 
 
 def render(game_state: Dict, inventory: List[str], dialogue_state: Dict) -> str:
@@ -94,8 +96,8 @@ def render(game_state: Dict, inventory: List[str], dialogue_state: Dict) -> str:
     score = game_state.get("score", 0)
 
     lines: List[str] = [
-        "DIAMOND'S CASEBOOK",
-        "==================",
+        style("DIAMOND'S CASEBOOK", AMBER),
+        style("==================", AMBER),
         f"Act {act} — {ACT_NAMES.get(act, '?')}        Case progress: {score} points",
     ]
 

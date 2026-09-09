@@ -119,10 +119,17 @@ Cheap, high-impact, no new dependencies, reversible.
 
 ## Phase 2 — CRT / color styling
 
-- [ ] Optional ANSI color pass (amber or green phosphor tint for the retro feel).
-- [ ] Confirm `NO_COLOR` + non-TTY fallbacks across all art.
-- [ ] Consider a one-time `sys.stdout.reconfigure(encoding="utf-8")` at startup
-      so Unicode art (incl. existing `TITLE_ART`) is robust on legacy consoles.
+- [x] **`media.style(text, color)`** — the one place gameplay code asks for
+      color; plain text by construction on non-TTY or under `NO_COLOR`.
+- [x] **Curated color pass:** title logo in phosphor green, skyline dimmed,
+      historical notes dimmed, darkness warning in grue-green, casebook
+      headers and `[New line of questioning]` notices in amber. Body prose
+      stays uncolored on purpose — color marks *kinds* of information.
+- [x] **Legacy console support:** best-effort VT-processing enable on classic
+      conhost (`media._ensure_vt`, ctypes, no dependencies); UTF-8 stdout
+      reconfigure already lands at startup in `main._enable_utf8_output`.
+- [x] **Fallbacks verified end to end:** piped/captured gameplay output
+      contains zero escape codes (tested).
 
 ## Phase 3 — Diegetic audio (ElevenLabs)
 
@@ -220,3 +227,7 @@ Bigger swings to deepen the noir RPG once the multimedia layer lands:
   (Smith Tower, docks, Pike Place, Eagles Hall) on first visit; first-visit
   announcement logic deduplicated between walking and trolley arrival.
   420 tests passing. Next phase: CRT color pass, then the audio pilot.
+- **Phase 2 complete (CRT color pass).** `media.style()` contract, curated
+  semantic coloring (phosphor title, dim notes, grue-green darkness, amber
+  headers/notices), conhost VT enablement, zero-leak fallbacks verified.
+  428 tests passing. Next: Phase 3 — the ElevenLabs radio-broadcast pilot.

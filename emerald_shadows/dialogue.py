@@ -12,6 +12,8 @@ import logging
 from typing import Dict, List, Optional, Set
 
 from .config_dialogue import NPCS, STARTING_TOPICS, TOPICS, npc_at, resolve_npc, resolve_topic
+from .game_art import AMBER
+from .media import style
 from .utils import print_text
 
 
@@ -32,7 +34,7 @@ class DialogueManager:
         self.known_topics.update(gained)
         if gained and announce:
             labels = ", ".join(TOPICS[t]["label"] for t in gained)
-            print_text(f"\n[New line of questioning: {labels}]")
+            print_text(style(f"\n[New line of questioning: {labels}]", AMBER))
         return gained
 
     def knows(self, topic: str) -> bool:
