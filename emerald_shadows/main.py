@@ -76,6 +76,13 @@ def main() -> None:
     finally:
         # Cleanup
         cleanup_logging(handler)
+        # In the standalone exe, a double-clicked console window would vanish
+        # the instant the game ends — hold it open so the last text can be read.
+        if getattr(sys, "frozen", False):
+            try:
+                input("\nPress Enter to close...")
+            except (EOFError, KeyboardInterrupt):
+                pass
         sys.exit(0)
 
 if __name__ == "__main__":

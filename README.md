@@ -20,6 +20,18 @@ A noir detective text adventure set in 1947 post-war Seattle. As Detective Johnn
 - **Integrated trolley network** for moving between districts.
 - **Auto-save on every change of scene**, plus manual save slots.
 
+## Download & Play (no install)
+
+**Windows:** grab `EmeraldShadows.exe` from the
+[latest release](https://github.com/red4golf/emerald-shadows/releases/latest)
+and double-click it. No Python, no setup — saves land in a `saves` folder next
+to the file.
+
+> Windows SmartScreen may warn about an unrecognized app the first time
+> (the exe isn't code-signed). Click **More info → Run anyway**.
+
+Playing from source works on any platform:
+
 ## Installation
 
 ### Prerequisites
