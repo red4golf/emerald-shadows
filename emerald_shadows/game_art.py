@@ -147,16 +147,25 @@ def display_title_screen() -> None:
     """Display the game's title screen with both logo and skyline."""
     # Imported here, not at module top: media imports this module's art
     # constants, so a top-level import would be circular.
-    from .media import style
+    from .media import art_enabled, style
 
     clear_screen()
-    print(style(TITLE_ART, BRIGHT_GREEN))
+    # EMERALD_NO_ART (and a non-interactive stdout) must suppress the art
+    # itself, not merely its colour. Playtesters set the variable as instructed
+    # and still got thirty-five lines of banner before a word of game.
+    show_art = art_enabled()
+
+    if show_art:
+        print(style(TITLE_ART, BRIGHT_GREEN))
+    else:
+        print_text("EMERALD SHADOWS")
     print_text(
         "Seattle, Washington. October 1947.\n"
         "The war is two years over and the city hasn't slept.\n"
         "Neither have you.\n"
     )
-    print(style(SEATTLE_SKYLINE, DIM))
+    if show_art:
+        print(style(SEATTLE_SKYLINE, DIM))
     print_text(
         "\nYou are Johnny Diamond, Detective.\n"
         "You are standing at the beginning of a long investigation.\n"

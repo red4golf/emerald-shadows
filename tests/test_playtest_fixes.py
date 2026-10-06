@@ -137,3 +137,114 @@ def test_casebook_points_at_the_waterfront_line_while_the_radio_is_open(state):
     everywhere else now walkable, the casebook is what keeps him findable."""
     rendered = casebook.render(state, [], {})
     assert "waterfront" in rendered.lower()
+
+
+# ---------------------------------------------------------------------------
+# Round two: what the retest on the fixed build turned up
+# ---------------------------------------------------------------------------
+
+def test_the_business_card_names_the_front(state):
+    """A tester read note_5 — a card printed NORTHWEST MARITIME IMPORTS — and
+    the casebook still listed "you don't have a name for the company" forty
+    turns later, stalling them in Act 1 with three puzzles solved."""
+    from emerald_shadows.item_manager import EXAMINE_DISCOVERIES, ITEM_DESCRIPTIONS
+
+    assert "Northwest Maritime Imports" in ITEM_DESCRIPTIONS["note_5"]["detailed"]
+    assert EXAMINE_DISCOVERIES["note_5"]["sets"] == "identified_organization"
+
+
+def test_act_two_is_reachable_from_the_card_alone(state):
+    """note_5 plus the cipher should be enough to turn the act, without
+    requiring the one specific notice at Pioneer Square."""
+    state["decoded_notes"] = True
+    state["identified_organization"] = True
+    assert acts.current_act(state) == 2
+
+
+def test_casebook_does_not_give_away_the_frequency(state):
+    """The informant's note hides the last digit on purpose. The casebook used
+    to print 415.6 one command later, cancelling the puzzle."""
+    state["found_emergency_frequency"] = True
+    rendered = casebook.render(state, [], {})
+    assert "415.6" not in rendered
+    assert "415" in rendered, "it should still say which band"
+
+
+def test_the_manifest_does_not_assume_evidence_you_may_not_have():
+    """It told players the Eagles minutes were in their other pocket. One who
+    had never been to the hall went looking through their inventory for it."""
+    from emerald_shadows.item_manager import ITEM_DESCRIPTIONS
+
+    text = ITEM_DESCRIPTIONS["manifest"]["detailed"]
+    assert "other pocket" not in text
+
+
+def test_no_art_env_var_suppresses_the_title_art(monkeypatch, capsys):
+    """Both testers were told to set EMERALD_NO_ART=1 and still got a screen of
+    banner. It only ever suppressed colour."""
+    import emerald_shadows.game_art as art
+
+    monkeypatch.setenv("EMERALD_NO_ART", "1")
+    monkeypatch.setattr(art, "clear_screen", lambda: None)
+    monkeypatch.setattr("builtins.input", lambda *a: "")
+    art.display_title_screen()
+    out = capsys.readouterr().out
+    assert art.TITLE_ART not in out
+    assert art.SEATTLE_SKYLINE not in out
+    assert "EMERALD SHADOWS" in out
+
+
+def test_the_man_in_the_grey_coat_is_a_real_person():
+    """Pike Place described him in detail and he could not be spoken to. A
+    tester called it the moment the game told him its prose was lying."""
+    from emerald_shadows.config_dialogue import NPCS, npc_at, resolve_npc
+    from emerald_shadows.config_locations import LOCATIONS
+
+    assert "grey coat" in LOCATIONS["pike_place"]["description"]
+    assert npc_at("pike_place", 1), "he must be there from Act 1"
+
+    for probe in ("man", "grey coat", "man in the grey coat", "nilsen"):
+        assert resolve_npc(probe) == "watcher", f"{probe!r} should reach him"
+
+    assert NPCS["watcher"]["topics"], "he needs something to say"
+
+
+def test_pike_place_is_no_longer_an_empty_room():
+    """It had no items, no people and no puzzle — a pure waypoint."""
+    from emerald_shadows.config_dialogue import npc_at
+
+    assert npc_at("pike_place", 1)
+
+
+def test_warehouse_22_can_be_learned_in_act_one():
+    """Its topic was unlocked only by Mathers, who doesn't appear until Act 2,
+    so an Act 1 player could never ask anybody about the hub."""
+    from emerald_shadows.config_dialogue import NPCS
+
+    act_one_sources = [
+        npc for npc, data in NPCS.items()
+        if data.get("requires_act", 1) == 1
+        and any("warehouse" in e.get("unlocks", []) for e in data["topics"].values())
+    ]
+    assert act_one_sources, "nobody in Act 1 opens the Warehouse 22 thread"
+
+
+def test_every_new_dialogue_flag_is_registered():
+    """A flag missing from the initial state never saves and never renders."""
+    from emerald_shadows.config_dialogue import NPCS
+
+    known = set(INITIAL_GAME_STATE)
+    for npc, data in NPCS.items():
+        for topic, entry in data["topics"].items():
+            flag = entry.get("sets")
+            if flag:
+                assert flag in known, f"{npc}:{topic} sets unregistered flag {flag!r}"
+
+
+def test_second_avenue_describes_where_its_exits_go():
+    """Seven exits with no signposting had both testers brute-forcing a hub."""
+    from emerald_shadows.config_locations import LOCATIONS
+
+    description = LOCATIONS["street"]["description"].lower()
+    for landmark in ("smith tower", "warehouse", "docks", "eagles", "pioneer square", "market"):
+        assert landmark in description, f"the street never mentions {landmark}"

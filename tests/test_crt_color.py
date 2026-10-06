@@ -60,4 +60,10 @@ def test_historical_note_has_no_ansi_codes_when_color_disabled(monkeypatch):
     messages = []
     monkeypatch.setattr(lm_module, "print_text", lambda t, **_: messages.append(t))
     lm._announce_first_visit("street")
-    assert messages and all(ESC not in m for m in messages)
+
+    # The note is no longer printed here — it's held back so it can land after
+    # the room description instead of ahead of it — but whatever is handed over
+    # must still be plain text, and nothing printed here may carry codes.
+    note = lm.take_pending_history()
+    assert note and ESC not in note
+    assert all(ESC not in m for m in messages)

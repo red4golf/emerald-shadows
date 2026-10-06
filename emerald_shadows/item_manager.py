@@ -321,8 +321,8 @@ ITEM_DESCRIPTIONS = {
             "approximately 850 pounds. Something weighing 3,200 pounds is not just "
             "medical supplies. There is a second load underneath the first, and someone "
             "in the Port Authority signed off on the discrepancy. "
-            "You have his name. You have his signature on the Eagles minutes "
-            "in your other pocket. Now you have the weight of what he signed."
+            "You have his name. Find what else he has put it to, and you will "
+            "have the weight of what he signed."
         ),
         "use_effects": {},
         "use_locations": [],
@@ -378,6 +378,18 @@ EXAMINE_DISCOVERIES: Dict[str, Dict] = {
     },
     "note_1": {
         "topics": ["mathers"],
+    },
+    # The card reads NORTHWEST MARITIME IMPORTS in plain type. A playtester read
+    # it, then watched the casebook keep "you don't have a name for the company"
+    # on the open list for forty turns and couldn't tell whether they'd missed a
+    # step or hit a bug — which also stalled them in Act 1 with three puzzles
+    # solved. Naming the front is naming the front, whichever paper does it.
+    "note_5": {
+        "sets": "identified_organization",
+        "score": 10,
+        "topics": ["sullivan", "angels"],
+        "text": "Northwest Maritime Imports. A name, on good stock. That's the "
+                "front, and now you can say so out loud.",
     },
     "meeting_minutes": {
         "topics": ["voss", "eagles"],

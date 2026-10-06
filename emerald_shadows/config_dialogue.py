@@ -360,6 +360,105 @@ NPCS: Dict[str, Dict] = {
         },
     },
     # ------------------------------------------------------------------
+    # The man in the grey coat. He was described in loving detail at Pike
+    # Place and was not implemented — both playtesters went for him, got
+    # "there's nobody here worth the breath," and one wrote that it was the
+    # first time the game asked him to trust its prose and then told him the
+    # prose was lying. He also fills two holes: Pike Place had no items, no
+    # people and no puzzle, and Warehouse 22 could only be learned from
+    # Mathers in Act 2. He is frightened rather than angry, which keeps him
+    # off Roy's note.
+    "watcher": {
+        "name": "the man in the grey coat",
+        "title": "watching the water at Pike Place",
+        "location": "pike_place",
+        "aliases": [
+            "man", "grey coat", "grey-coat man", "man in grey coat",
+            "man in the grey coat", "longshoreman", "nilsen", "watcher",
+        ],
+        "greeting": (
+            "He doesn't turn around. Up close he is about fifty, and the coat is "
+            "good and fifteen years old, and his hands stay in the pockets.\n\n"
+            "'The flower people start at four,' he says, to the water. 'I come "
+            "down and watch the boats and then I go and stand at the hall and "
+            "they don't call my name. That's the whole day.'\n\n"
+            "A gull goes over. He watches that too."
+        ),
+        "deflection": (
+            "'No,' he says, pleasantly enough, the way a man says it when he has "
+            "decided in advance to say it to everything."
+        ),
+        "topics": {
+            "case": {
+                "text": (
+                    "'You're police.' Not a question. 'I can tell from here and I "
+                    "haven't looked at you.'\n\n"
+                    "He takes one hand out of his pocket, looks at it, puts it "
+                    "back.\n\n"
+                    "'Nilsen. That's all of it you get, and I'd rather you didn't "
+                    "write it. I worked the night gang nineteen months and in "
+                    "April they stopped calling me and started calling men I've "
+                    "never seen on this waterfront in my life.'"
+                ),
+                "unlocks": ["supplies"],
+            },
+            "supplies": {
+                "text": (
+                    "'Crates.' He says it the way you'd name a weight. 'Stencilled "
+                    "US ARMY and painted over so bad you could read it under the "
+                    "paint. We moved them off the lighters and we did not take them "
+                    "to the bonded shed, which is where cargo goes, which is the "
+                    "only place cargo goes.'\n\n"
+                    "The gull comes back. He waits for it to finish.\n\n"
+                    "'Twenty-two. Up past the grain terminal. In the gate, and the "
+                    "paper changes inside, and what comes out the other side is "
+                    "somebody else's and legal. I asked once where it went after. "
+                    "That was the week they stopped calling my name.'"
+                ),
+                "unlocks": ["warehouse", "harbormaster"],
+                "sets": "nilsen_talked",
+                "score": 15,
+            },
+            "warehouse": {
+                "text": (
+                    "'Two doors. The gate on the rail side for the trucks, and a "
+                    "man door on the water side that is supposed to be chained and "
+                    "is not.' He finally looks at you, for about a second. 'I am "
+                    "telling you about a door, Detective. I am not telling you to "
+                    "go through it.'"
+                ),
+                "sets": "knows_warehouse_doors",
+                "score": 10,
+            },
+            "harbormaster": {
+                "text": (
+                    "'That word.' He puts his chin down into the collar. 'On the "
+                    "gang you heard it maybe twice a year and never from the man "
+                    "who was giving the order. Somebody above the man giving the "
+                    "order. That's all it ever meant to me and I was glad of it.'"
+                ),
+            },
+            "pier": {
+                "text": (
+                    "'Seven.' He nods at the water, south. 'Launches off it at "
+                    "three in the morning and back before the market opens. "
+                    "I've watched that from this exact spot since June. You're "
+                    "the first one to come and ask me about it.'"
+                ),
+                "sets": "knows_pier",
+                "score": 5,
+            },
+            "mathers": {
+                "text": (
+                    "'There was always a cop on the gate.' He shrugs, and it costs "
+                    "him something. 'I never looked at his number. You don't, when "
+                    "you want the work. I've thought about that a good deal since "
+                    "April.'"
+                ),
+            },
+        },
+    },
+    # ------------------------------------------------------------------
     "mathers": {
         "name": "Mathers",
         "title": "Badge 447, Third District",

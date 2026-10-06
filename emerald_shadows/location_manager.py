@@ -57,6 +57,8 @@ class LocationManager:
         self.last_command: Optional[str] = None
         # Rooms already described in full. Re-entry gets the short form.
         self.described: Set[str] = set()
+        # A first-visit historical note waiting to be shown after the room.
+        self.pending_history: Optional[str] = None
 
     def _initialize_locations(self) -> None:
         """Initialize location data structures."""
@@ -327,8 +329,24 @@ class LocationManager:
             return
         location.first_visit = False
         present_location(location_name)
+        # Hold the note back rather than printing it here. It used to land
+        # *above* the room description, so every new room opened with four to
+        # six lines of history before telling the player anything actionable.
+        # Both playtesters learned to scroll past it — and then started
+        # skipping the tops of room descriptions too, which is where some of
+        # the clues live. The caller prints it after the room.
         if location.historical_note:
-            print_text(style(f"\nHistorical Note: {location.historical_note}", DIM))
+            self.pending_history = location.historical_note
+
+    def take_pending_history(self) -> Optional[str]:
+        """Hand over the first-visit note, once, for printing after the room."""
+        note, self.pending_history = self.pending_history, None
+        return note
+
+    def current_historical_note(self) -> Optional[str]:
+        """The note for wherever the player is standing, for the `history` verb."""
+        location = self.locations.get(self.current_location)
+        return location.historical_note if location else None
 
     def show_historical_note(self, location: str) -> None:
         """Display historical information about the specified location."""
