@@ -1,5 +1,5 @@
 """Location management system for Emerald Shadows."""
-from typing import Dict, Optional, List, Tuple, Any
+from typing import Any, Dict, List, Optional, Set, Tuple
 import json
 import logging
 from copy import deepcopy
@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from .config import DEFAULT_GATE_MESSAGE, GATE_MESSAGES, STARTING_LOCATION
 from .config_locations import LOCATIONS
 from .trolley_system import TrolleySystem, TrolleyState
-from .utils import print_text
+from .utils import print_block, print_text
 from .media import present_location, style
 from .game_art import DIM
 
@@ -55,6 +55,10 @@ class LocationManager:
         self._initialize_locations()
         self.trolley = TrolleySystem()
         self.last_command: Optional[str] = None
+        # Rooms already described in full. Re-entry gets the short form.
+        self.described: Set[str] = set()
+        # A first-visit historical note waiting to be shown after the room.
+        self.pending_history: Optional[str] = None
 
     def _initialize_locations(self) -> None:
         """Initialize location data structures."""
@@ -83,24 +87,40 @@ class LocationManager:
             logging.error(f"Failed to initialize locations: {e}")
             raise LocationError("Could not initialize game locations")
 
-    def get_location_description(self) -> str:
-        """Get the description of the current location with available exits and items."""
+    def get_location_description(self, brief: Optional[bool] = None) -> str:
+        """Describe the current location.
+
+        ``brief`` None means "decide for me": the first auto-display of a room
+        gives the whole thing, later ones give the opening line plus exits and
+        items. Playtesters re-read the Smith Tower lobby paragraph eight times
+        hunting for the one line that had changed, and started skimming
+        everything — good prose turns into wallpaper if you force people
+        through it on every pass. ``look`` asks for the full text explicitly.
+        """
         try:
             location = self.locations[self.current_location]
-            description_parts = [location.description]
+
+            if brief is None:
+                brief = self.current_location in self.described
+                self.described.add(self.current_location)
+
+            body = location.description
+            if brief:
+                body = self._opening_line(body)
+            description_parts = [body]
 
             # Add available exits
             if location.exits:
                 exit_list = ", ".join(location.exits.keys())
                 description_parts.append(f"\nExits: {exit_list}")
-        
+
             # List items in the room
             if location.items:
                 item_list = ", ".join(location.items)
                 description_parts.append(f"\nYou can see: {item_list}")
-        
+
             return "\n".join(description_parts)
-            
+
         except KeyError:
             logging.error(f"Invalid location reference: {self.current_location}")
             return "Error: Location not found."
@@ -108,6 +128,20 @@ class LocationManager:
             logging.error(f"Error getting location description: {e}")
             return "Error: Could not get location description."
     
+    @staticmethod
+    def _opening_line(description: str) -> str:
+        """The first sentence or two of a room description — enough to place the
+        player without making them re-read a paragraph they already know."""
+        first_para = description.split("\n\n")[0].strip()
+        out, count = [], 0
+        for chunk in first_para.replace("! ", ". ").replace("? ", ". ").split(". "):
+            out.append(chunk)
+            count += 1
+            if count == 2:
+                break
+        text = ". ".join(out).rstrip(".")
+        return text + "."
+
     def resolve_exit(self, word: str) -> Optional[str]:
         """Resolve player input to an exit of the current location.
 
@@ -189,15 +223,23 @@ class LocationManager:
             location = self.locations[location_name]
             if location.requires:
                 if not game_state.get(location.requires, False):
-                    print_text("\n" + GATE_MESSAGES.get(
-                        location.requires, DEFAULT_GATE_MESSAGE
-                    ))
+                    print_block("\n" + self._gate_message(location.requires, game_state))
                     return False
             return True
-            
+
         except Exception as e:
             logging.error(f"Error checking location requirements: {e}")
             return False
+
+    @staticmethod
+    def _gate_message(flag: str, game_state: Dict) -> str:
+        """Why the player can't go in yet. Act 3's refusal is built from the
+        flags still outstanding rather than an authored guess, so it can never
+        tell the player they're missing something they already have."""
+        if flag == "act_three":
+            from .acts import pier_gate_message
+            return pier_gate_message(game_state)
+        return GATE_MESSAGES.get(flag, DEFAULT_GATE_MESSAGE)
 
     def _handle_trolley_movement(self) -> bool:
         """Handle special case of trolley movement."""
@@ -264,14 +306,11 @@ class LocationManager:
         toggled whether it was rolling — so a player who boarded could never get
         back onto the street. Pioneer Square is reachable only by tram, so that
         made the case impossible to finish.
-        """
-        if self.trolley.in_motion:
-            print_text(
-                "\nThe tram is still moving, and Diamond has already had one "
-                "conversation with a Seattle street this year. Wait for the stop."
-            )
-            return False
 
+        The tram now arrives in a single command, so it is always standing at a
+        stop between turns and 'off' always works. The old "wait for the stop"
+        refusal contradicted the status line and cost playtesters whole turns.
+        """
         destination = self.trolley.exit_trolley()
         if not destination:
             print_text("\nYou aren't aboard anything.")
@@ -290,8 +329,24 @@ class LocationManager:
             return
         location.first_visit = False
         present_location(location_name)
+        # Hold the note back rather than printing it here. It used to land
+        # *above* the room description, so every new room opened with four to
+        # six lines of history before telling the player anything actionable.
+        # Both playtesters learned to scroll past it — and then started
+        # skipping the tops of room descriptions too, which is where some of
+        # the clues live. The caller prints it after the room.
         if location.historical_note:
-            print_text(style(f"\nHistorical Note: {location.historical_note}", DIM))
+            self.pending_history = location.historical_note
+
+    def take_pending_history(self) -> Optional[str]:
+        """Hand over the first-visit note, once, for printing after the room."""
+        note, self.pending_history = self.pending_history, None
+        return note
+
+    def current_historical_note(self) -> Optional[str]:
+        """The note for wherever the player is standing, for the `history` verb."""
+        location = self.locations.get(self.current_location)
+        return location.historical_note if location else None
 
     def show_historical_note(self, location: str) -> None:
         """Display historical information about the specified location."""

@@ -42,15 +42,24 @@ LOCATIONS = {
             "Second Avenue at night. The rain comes down the way it always does in October "
             "in Seattle — not hard, just permanent, like it intends to stay. Neon from the "
             "taverns bleeds across the wet pavement. Steam rises from the manhole covers "
-            "at your feet, carrying the smell of the city's underside. Somewhere downhill, "
-            "beyond the rooftops, Elliott Bay is black and cold."
+            "at your feet, carrying the smell of the city's underside.\n\n"
+            "Headquarters is behind you. North the Smith Tower stands over everything; "
+            "east are the warehouses; south the avenue runs downhill to the docks and "
+            "Elliott Bay, black and cold. West is the Eagles hall. A few blocks on, "
+            "Pioneer Square sits at the old grade, and the Market hangs off the hill "
+            "above the waterfront."
         ),
         "exits": {
             "station": "police_station",
             "north": "smith_tower",
             "east": "warehouse_district",
             "south": "docks",
-            "west": "eagles_hall"
+            "west": "eagles_hall",
+            # Pioneer Square and the Market are a few blocks on foot. They used
+            # to be reachable only by tram, which meant every return trip was a
+            # full loop of a one-way line.
+            "square": "pioneer_square",
+            "market": "pike_place"
         },
         "items": ["newspaper"],
         "first_visit": True,
@@ -181,7 +190,8 @@ LOCATIONS = {
             "underground": "underground_tunnels",
             "trolley": "trolley",
             "shack": "harbormaster_shack",
-            "south": "pier_seven"
+            "south": "pier_seven",
+            "west": "waterfront"
         },
         "items": [],
         "first_visit": True,

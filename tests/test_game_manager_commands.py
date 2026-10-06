@@ -62,7 +62,7 @@ def test_help_command_invokes_show_help(monkeypatch, game_manager):
 
 
 def test_look_command_prints_description(monkeypatch, game_manager):
-    monkeypatch.setattr(game_manager.location_manager, "get_location_description", lambda: "Dark alley")
+    monkeypatch.setattr(game_manager.location_manager, "get_location_description", lambda **_: "Dark alley")
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda text, **_: messages.append(text))
     monkeypatch.setattr(game_manager_module, "print_block", lambda text, **_: messages.append(text))
@@ -256,7 +256,7 @@ def test_look_in_dark_location_shows_darkness_warning(monkeypatch, game_manager)
 
 def test_look_in_dark_location_suppresses_room_description(monkeypatch, game_manager):
     monkeypatch.setattr(game_manager.location_manager, "is_dark", lambda: True)
-    monkeypatch.setattr(game_manager.location_manager, "get_location_description", lambda: "SECRET ROOM TEXT")
+    monkeypatch.setattr(game_manager.location_manager, "get_location_description", lambda **_: "SECRET ROOM TEXT")
     game_manager.game_state["flashlight_lit"] = False
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda text, **_: messages.append(text))
@@ -268,7 +268,7 @@ def test_look_in_dark_location_suppresses_room_description(monkeypatch, game_man
 
 def test_look_in_dark_location_with_flashlight_shows_description(monkeypatch, game_manager):
     monkeypatch.setattr(game_manager.location_manager, "is_dark", lambda: True)
-    monkeypatch.setattr(game_manager.location_manager, "get_location_description", lambda: "Tunnel walls drip.")
+    monkeypatch.setattr(game_manager.location_manager, "get_location_description", lambda **_: "Tunnel walls drip.")
     game_manager.game_state["flashlight_lit"] = True
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda text, **_: messages.append(text))
@@ -280,7 +280,7 @@ def test_look_in_dark_location_with_flashlight_shows_description(monkeypatch, ga
 
 def test_look_in_lit_location_shows_description(monkeypatch, game_manager):
     monkeypatch.setattr(game_manager.location_manager, "is_dark", lambda: False)
-    monkeypatch.setattr(game_manager.location_manager, "get_location_description", lambda: "Dark alley")
+    monkeypatch.setattr(game_manager.location_manager, "get_location_description", lambda **_: "Dark alley")
     messages = []
     monkeypatch.setattr(game_manager_module, "print_text", lambda text, **_: messages.append(text))
     monkeypatch.setattr(game_manager_module, "print_block", lambda text, **_: messages.append(text))

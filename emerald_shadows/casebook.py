@@ -21,8 +21,14 @@ FACTS: List[Dict[str, str]] = [
     {"flag": "identified_organization",
      "text": "Northwest Maritime Imports is the front — a shell with four siblings and "
              "one registered agent."},
+    # Deliberately does NOT print the frequency. The informant's note loses its
+    # last digit to the rain on purpose — "ten numbers it could be, you'll have
+    # to find the last one yourself, on the dial" — and the casebook used to
+    # hand that digit over one command later, cancelling the puzzle before the
+    # player had touched the set.
     {"flag": "found_emergency_frequency",
-     "text": "They broadcast nightly at 2 AM on 415.6 MHz."},
+     "text": "They broadcast nightly at 2 AM, somewhere in the 415 band. The "
+             "note lost its last digit to the rain."},
     {"flag": "tuned_frequency",
      "text": "Heard on the air: the count was short, and the Harbormaster wants it moved "
              "tonight. Pier seven."},
@@ -70,7 +76,8 @@ OPEN: List[Dict[str, str]] = [
     {"flag": "identified_organization",
      "text": "You don't have a name for the company behind it."},
     {"flag": "found_emergency_frequency",
-     "text": "They talk to each other somehow. You don't know how."},
+     "text": "They talk to each other somehow, and you don't know how. Whoever "
+             "watches that stretch of waterfront every working day would."},
     {"flag": "identified_vehicle",
      "text": "A blue sedan keeps turning up. Nobody saw the whole plate."},
     {"flag": "found_warehouse",

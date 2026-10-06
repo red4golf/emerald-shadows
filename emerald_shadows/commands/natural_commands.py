@@ -71,6 +71,8 @@ class NaturalCommandHandler:
             "notes": "case",
             "topics": "topics",
             "questions": "topics",
+            "history": "history",
+            "note": "history",
             "listen": "listen",
             "arrest": "arrest",
         }
@@ -103,6 +105,7 @@ class NaturalCommandHandler:
             "speak": "talk",
             "interrogate": "talk",
             # Puzzle operation
+            "history": "history",
             "turn": "turn",
             "rotate": "turn",
             "spin": "turn",

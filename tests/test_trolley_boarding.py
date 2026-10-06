@@ -138,13 +138,45 @@ def test_can_board_and_disembark_more_than_once():
     assert lm.current_location == "smith_tower"
 
 
-def test_cannot_step_off_a_moving_tram():
+def test_one_command_per_stop():
+    """The tram used to need two 'next' commands per stop — one to pull away,
+    one to arrive — which doubled every journey on a four-stop one-way loop.
+    Playtesters stopped reading the output and counted keystrokes."""
+    lm = _boarded_manager()
+    start = lm.trolley.position
+
+    lm.handle_trolley_command("next")
+    assert lm.trolley.position == (start + 1) % len(lm.trolley.routes)
+    assert lm.trolley.in_motion is False, "the tram should arrive, not hang mid-ride"
+
+
+def test_off_always_works_between_turns():
+    """With one command per stop the tram is never mid-ride when the player
+    types, so 'off' must never refuse. The old 'wait for the stop' message
+    contradicted the status line and cost testers whole turns."""
     lm = _boarded_manager()
     lm.handle_trolley_command("next")
-    assert lm.trolley.in_motion is True
-
     lm.handle_trolley_command("off")
-    assert lm.current_location == "trolley"
+    assert lm.current_location != "trolley"
+
+
+def test_next_stays_listed_while_stopped():
+    """The exits line omitted 'next' whenever the tram was standing at a stop,
+    so the game read as a dead end. One missing word made a tester quit."""
+    lm = _boarded_manager()
+    lm.handle_trolley_command("next")
+    assert "next" in lm.get_valid_exits()
+    assert "off" in lm.get_valid_exits()
+
+
+def test_ride_text_varies_between_stops():
+    """A long ride used to print one identical sentence over and over."""
+    lm = _boarded_manager()
+    seen = set()
+    for _ in range(len(lm.trolley.routes)):
+        seen.add(lm.trolley._ride_line())
+        lm.handle_trolley_command("next")
+    assert len(seen) > 1
 
 
 def test_riding_to_a_named_stop_and_stepping_off():
@@ -158,13 +190,30 @@ def test_riding_to_a_named_stop_and_stepping_off():
     assert lm.current_location == "pioneer_square"
 
 
-def test_pioneer_square_is_reachable_only_by_tram():
-    """If this stops being true, the tram bugs stop being fatal — but the
-    walkthrough assumes the ride, so it should fail loudly instead."""
+def test_tram_only_districts_are_now_walkable():
+    """Pioneer Square and the Waterfront used to be tram-only, and the line is
+    one-way, so every return visit cost a full loop. They're on foot now."""
     from emerald_shadows.config_locations import LOCATIONS
 
-    approaches = [
-        name for name, data in LOCATIONS.items()
-        if "pioneer_square" in data["exits"].values()
-    ]
-    assert approaches == []
+    for target in ("pioneer_square", "waterfront"):
+        on_foot = [
+            name for name, data in LOCATIONS.items()
+            if target in data["exits"].values() and name != "trolley"
+        ]
+        assert on_foot, f"{target} is still reachable only by tram"
+
+
+def test_the_motorman_is_still_findable():
+    """Roy rides the tram and is the only source of the informant's note. Now
+    that everything else is walkable, a player could plausibly never board —
+    so the casebook has to point at the waterfront line while that thread is
+    open, or the case quietly becomes impossible again."""
+    from copy import deepcopy
+
+    from emerald_shadows import casebook
+    from emerald_shadows.config import INITIAL_GAME_STATE
+    from emerald_shadows.config_dialogue import NPCS
+
+    assert NPCS["roy"]["location"] == "trolley"
+    rendered = casebook.render(deepcopy(INITIAL_GAME_STATE), [], {})
+    assert "waterfront" in rendered.lower()

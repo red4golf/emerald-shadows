@@ -109,28 +109,42 @@ class TrolleySystem:
         self.last_stop = self.routes[self.position]['description']
 
     def handle_movement(self) -> Tuple[str, Dict[str, str]]:
-        try:
-            current_stop = self.routes[self.position]
-            
-            if self.in_motion:
-                self.in_motion = False
-                self.last_stop = current_stop['description']
-                return (
-                    f"\nThe tram shudders to a stop. {current_stop['description']}.\n"
-                    f"Type 'off' to step out or 'next' to ride on."
-                ), current_stop['exits']
+        """Ride to the next stop. One command, one stop.
 
-            self.in_motion = True
+        This used to take two commands per stop — one to lurch away, one to
+        arrive — which doubled every journey and printed the same two sentences
+        each time. On a four-stop one-way loop that meant up to eight presses to
+        reach a neighbour, and playtesters stopped reading the output and just
+        counted keystrokes. Arriving in a single command halves every ride and
+        removes the in-between state that made 'off' fail confusingly.
+        """
+        try:
             self._advance_position()
-            next_stop = self.routes[self.position]
+            self.in_motion = False
+            stop = self.routes[self.position]
             return (
-                "\nThe overhead wire crackles and the tram lurches forward into the rain...",
-                {"next": "trolley", "off": next_stop['exits']['off']}
-            )
-                    
+                f"\n{self._ride_line()}\n\n"
+                f"{stop['description']}.\n"
+                f"'off' to step out here, 'next' to ride on."
+            ), {"next": "trolley", "off": stop["exits"]["off"]}
+
         except Exception as e:
             logging.error(f"Error in trolley movement: {e}")
-            return "There was a problem with the trolley. Please try again.", {"off": "pike_place"}
+            return "There was a problem with the trolley. Please try again.", {
+                "next": "trolley",
+                "off": "pike_place",
+            }
+
+    def _ride_line(self) -> str:
+        """A line for the ride itself, varied so a long trip isn't one sentence
+        repeated. Cycles on position so consecutive stops always read differently."""
+        lines = (
+            "The wire crackles overhead and the waterfront slides past in the rain.",
+            "Wheels on wet rail, and a man two seats up turns a newspaper over.",
+            "The tram leans into the grade. Somewhere below, a ship works at its lines.",
+            "Rain on the window, the smell of motor grease, and nobody looking at anybody.",
+        )
+        return lines[self.position % len(lines)]
 
     def exit_trolley(self) -> Optional[str]:
         if not self.on_trolley:

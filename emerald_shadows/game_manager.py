@@ -18,7 +18,7 @@ from .item_manager import ItemManager
 from .puzzles import PuzzleManager
 from .commands.natural_commands import NaturalCommandHandler
 from .utils import SaveLoadManager, print_block, print_text, clear_screen
-from .game_art import display_title_screen, BRIGHT_GREEN
+from .game_art import display_title_screen, BRIGHT_GREEN, DIM
 from .media import present, style
 
 TROLLEY_COMMANDS = {"next", "off", "status", "history"}
@@ -107,8 +107,12 @@ class GameManager:
             return True
 
         if command_type in TROLLEY_COMMANDS:
-            self._handle_trolley_command(command_type)
-            return True
+            # 'history' is shared: aboard the tram it means the route's story,
+            # anywhere else it means the room's. Only hand it to the tram when
+            # the player is actually on it.
+            if command_type != "history" or self.location_manager.current_location == "trolley":
+                self._handle_trolley_command(command_type)
+                return True
 
         # Verbs that operate a puzzle in this room take precedence, so 'listen'
         # in the tunnels means the pipe and not the general-purpose command.
@@ -137,6 +141,7 @@ class GameManager:
             "exits": self._handle_exits,
             "case": self._handle_case,
             "topics": self._handle_topics,
+            "history": self._handle_history,
             "ask": self._handle_ask,
             "talk": self._handle_talk,
             "arrest": self._handle_arrest,
@@ -180,6 +185,14 @@ class GameManager:
         available_items = self.location_manager.get_available_items()
         self.item_manager.examine_item(item, available_items, self.game_state)
 
+    def _show_first_visit_history(self) -> None:
+        """A room's note, once, after the room itself — then it lives behind
+        the `history` verb."""
+        note = self.location_manager.take_pending_history()
+        if note:
+            print_block(style("\n" + note, DIM))
+            print_text("('history' to read that again, anywhere.)")
+
     def _announce_company(self) -> None:
         """Name anybody standing here worth talking to."""
         presence = self.dialogue_manager.describe_presence(
@@ -194,7 +207,9 @@ class GameManager:
         if self.location_manager.is_dark() and not self.game_state.get("flashlight_lit", False):
             print_text(style(DARK_WARNING, BRIGHT_GREEN))
             return
-        description = self.location_manager.get_location_description()
+        # An explicit 'look' always gets the full text, however many times the
+        # player has been here; only the automatic on-entry display abbreviates.
+        description = self.location_manager.get_location_description(brief=False)
         print_text("\n" + description)
         self._announce_company()
 
@@ -284,6 +299,19 @@ class GameManager:
             self.item_manager.get_inventory(),
             self.dialogue_manager.get_state(),
         ))
+
+    def _handle_history(self, _: Any) -> None:
+        """Read the history of wherever Diamond is standing.
+
+        The notes are the best prose in the game and they were mandatory,
+        which is how they trained two playtesters to skip text. On demand they
+        are a reward; ahead of the room description they were an obstacle.
+        """
+        note = self.location_manager.current_historical_note()
+        if note:
+            print_block(style("\n" + note, DIM))
+        else:
+            print_text("\nNothing here has a past worth writing down.")
 
     def _handle_topics(self, _: Any) -> None:
         """List the lines of questioning Diamond has earned."""
@@ -495,6 +523,7 @@ class GameManager:
                 if moved:
                     print_text("\n" + self.location_manager.get_location_description())
                     self._announce_company()
+                    self._show_first_visit_history()
                     self._last_location = current_location
 
                 self.check_auto_save(moved=moved)
@@ -571,6 +600,7 @@ class GameManager:
             "  combine <x> with <y>  — two clues are sometimes one clue\n"
             "  inventory (or i)      — check what you're carrying\n"
             "  case                  — your casebook: established, named, still open\n"
+            "  history               — what happened where you're standing\n"
             "  score                 — the short version of the same thing\n\n"
             "PEOPLE\n"
             "  Nobody in this city volunteers anything. You have to ask.\n"

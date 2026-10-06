@@ -57,6 +57,8 @@ INITIAL_GAME_STATE: Final[Dict[str, Any]] = {
     "roy_talking": False,
     "roy_gave_note": False,
     "knows_mathers": False,
+    "nilsen_talked": False,
+    "knows_warehouse_doors": False,
     "mathers_confessed": False,
     "mathers_named_warehouse": False,
 
@@ -134,7 +136,7 @@ BASIC_COMMANDS: Final[Set[str]] = frozenset({
     "inventory", "i",
 
     # Investigation
-    "case", "topics", "listen",
+    "case", "topics", "listen", "history",
 
     # Game Control
     "help", "quit", "save", "load", "score"

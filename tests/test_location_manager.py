@@ -66,10 +66,32 @@ def test_move_requires_flag_allows_entry(location_manager, game_state):
     assert location_manager.current_location == "underground_tunnels"
 
 
-def test_first_visit_shows_historical_note(location_manager, game_state, capsys):
+def test_first_visit_queues_the_historical_note(location_manager, game_state):
+    """The note is deferred rather than printed, so the caller can show it after
+    the room. It used to print above the description, which trained playtesters
+    to scroll past it — and then past the top of room descriptions too."""
     location_manager.move_to_location("upstairs", game_state)
-    out = capsys.readouterr().out
-    assert "historical" in out.lower()
+    note = location_manager.take_pending_history()
+    assert note
+    assert "evidence" in note.lower() or "1946" in note
+
+
+def test_the_note_is_only_queued_once(location_manager, game_state):
+    location_manager.move_to_location("upstairs", game_state)
+    assert location_manager.take_pending_history()
+    assert location_manager.take_pending_history() is None
+
+    location_manager.move_to_location("downstairs", game_state)
+    location_manager.take_pending_history()
+    location_manager.move_to_location("upstairs", game_state)
+    assert location_manager.take_pending_history() is None, "second visit must be quiet"
+
+
+def test_history_verb_works_anywhere_any_time(location_manager, game_state):
+    """Having read it once, the player can always get it back."""
+    location_manager.move_to_location("upstairs", game_state)
+    location_manager.take_pending_history()
+    assert location_manager.current_historical_note()
 
 
 def test_second_visit_no_historical_note(location_manager, game_state, capsys):
