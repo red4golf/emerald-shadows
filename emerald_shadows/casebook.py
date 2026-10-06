@@ -70,7 +70,8 @@ OPEN: List[Dict[str, str]] = [
     {"flag": "identified_organization",
      "text": "You don't have a name for the company behind it."},
     {"flag": "found_emergency_frequency",
-     "text": "They talk to each other somehow. You don't know how."},
+     "text": "They talk to each other somehow, and you don't know how. Whoever "
+             "watches that stretch of waterfront every working day would."},
     {"flag": "identified_vehicle",
      "text": "A blue sedan keeps turning up. Nobody saw the whole plate."},
     {"flag": "found_warehouse",

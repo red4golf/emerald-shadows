@@ -463,19 +463,46 @@ def resolve_npc(word: str) -> str:
     return ""
 
 
+def _normalise(text: str) -> str:
+    """Reduce a topic phrase to its comparable core.
+
+    The player types what the `topics` command printed, so both sides have to be
+    flattened the same way or the game rejects its own wording. Previously only
+    the player's input had its article stripped, which meant `topics` could
+    print "the missing medical supplies" and `ask` would refuse it — and since
+    that topic is the only route to the informant's note, the case became
+    impossible to close.
+    """
+    text = (text or "").strip().lower()
+    for ch in "'\"“”‘’.,!?":
+        text = text.replace(ch, "")
+    for prefix in ("the ", "a ", "an "):
+        if text.startswith(prefix):
+            text = text[len(prefix):]
+    return " ".join(text.split())
+
+
 def resolve_topic(word: str) -> str:
     """Match player input to a topic key by name or alias. Returns '' on no match."""
-    word = (word or "").strip().lower()
-    if not word:
+    probe = _normalise(word)
+    if not probe:
         return ""
-    for prefix in ("the ", "a "):
-        if word.startswith(prefix):
-            word = word[len(prefix):]
-    if word in TOPICS:
-        return word
+    if probe in TOPICS:
+        return probe
+
+    # Exact match against the normalised label or any alias.
     for key, topic in TOPICS.items():
-        if word == topic["label"].lower() or word in topic.get("aliases", []):
+        if probe == _normalise(topic["label"]) or probe == _normalise(key):
             return key
-        if word in key:
+        if any(probe == _normalise(a) for a in topic.get("aliases", ())):
+            return key
+
+    # Then partial: "sedan" for "the blue sedan", or a label the player has
+    # padded out. Longest key first so a short word can't shadow a better match.
+    for key, topic in sorted(TOPICS.items(), key=lambda kv: -len(kv[0])):
+        candidates = [_normalise(topic["label"]), key] + [
+            _normalise(a) for a in topic.get("aliases", ())
+        ]
+        if any(probe in c or c in probe for c in candidates if c):
             return key
     return ""

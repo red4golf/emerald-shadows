@@ -194,7 +194,9 @@ class GameManager:
         if self.location_manager.is_dark() and not self.game_state.get("flashlight_lit", False):
             print_text(style(DARK_WARNING, BRIGHT_GREEN))
             return
-        description = self.location_manager.get_location_description()
+        # An explicit 'look' always gets the full text, however many times the
+        # player has been here; only the automatic on-entry display abbreviates.
+        description = self.location_manager.get_location_description(brief=False)
         print_text("\n" + description)
         self._announce_company()
 

@@ -50,7 +50,12 @@ LOCATIONS = {
             "north": "smith_tower",
             "east": "warehouse_district",
             "south": "docks",
-            "west": "eagles_hall"
+            "west": "eagles_hall",
+            # Pioneer Square and the Market are a few blocks on foot. They used
+            # to be reachable only by tram, which meant every return trip was a
+            # full loop of a one-way line.
+            "square": "pioneer_square",
+            "market": "pike_place"
         },
         "items": ["newspaper"],
         "first_visit": True,
@@ -181,7 +186,8 @@ LOCATIONS = {
             "underground": "underground_tunnels",
             "trolley": "trolley",
             "shack": "harbormaster_shack",
-            "south": "pier_seven"
+            "south": "pier_seven",
+            "west": "waterfront"
         },
         "items": [],
         "first_visit": True,

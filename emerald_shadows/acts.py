@@ -108,3 +108,36 @@ def missing_for_next_act(game_state: Dict) -> List[str]:
 def missing_finale_items(inventory: List[str]) -> List[str]:
     """Evidence the player still needs before the arrest will stick."""
     return [item for item in FINALE_ITEMS if item not in inventory]
+
+
+# What each Act 3 prerequisite is, said the way Diamond would say it. The old
+# Pier 7 refusal claimed the player couldn't name who ran the pier, what was on
+# it, or who signed for it — which playtesters could all do, from Ches, the
+# manifest and the Eagles minutes. A gate that misdescribes itself reads as a
+# bug, and sent one tester hunting for hours in the wrong places.
+ACT_THREE_GAPS: Dict[str, str] = {
+    "found_warehouse": "where the cargo actually goes between the dock and the boat",
+    "observed_activity": "what is under Pioneer Square, confirmed and not guessed",
+    "identified_suspect": "a name to put on the face in the photograph",
+    "identified_vehicle": "the plate on the blue sedan",
+}
+
+
+def pier_gate_message(game_state: Dict) -> str:
+    """The Pier 7 refusal, listing exactly what is still outstanding."""
+    missing = [
+        text for flag, text in ACT_THREE_GAPS.items()
+        if not game_state.get(flag, False)
+    ]
+    if not missing:
+        return "Pier 7 is open to you. Go and finish it."
+
+    lines = [
+        "Pier 7 is down there in the dark, working. You could walk onto it right "
+        "now and get nothing that would survive a courtroom.",
+        "",
+        "You still cannot give them:",
+    ]
+    lines += [f"  - {text}" for text in missing]
+    lines += ["", "Finish the legwork. Then the pier."]
+    return "\n".join(lines)
